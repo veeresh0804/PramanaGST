@@ -18,7 +18,8 @@ import {
   IndianRupee,
   ShieldAlert,
   ChevronRight,
-  Loader2
+  Loader2,
+  FileSearch
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -33,35 +34,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function AnalyticsPage() {
   const { toast } = useToast();
   const [healthData, setHealthData] = useState<HealthScore | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
     calculateGSTHealthScore().then(setHealthData);
   }, []);
-
-  const handleDownloadAudit = (clusterId: string) => {
-    setGeneratingId(clusterId);
-    toast({
-      title: "Pramāṇa Audit Engine",
-      description: "Extracting graph evidence and IRN cross-references...",
-    });
-
-    // Simulate audit generation delay
-    setTimeout(() => {
-      setGeneratingId(null);
-      toast({
-        title: "Audit Report Generated",
-        description: `Deterministic evidence log for ${clusterId} is ready for download.`,
-      });
-      // In a production environment, this would trigger a window.open to a PDF stream
-    }, 2500);
-  };
 
   // Detect Fraud Clusters from Mock Data
   const fraudClusters = useMemo(() => {
@@ -73,12 +56,12 @@ export default function AnalyticsPage() {
         id: 'FRAUD-RING-72',
         title: 'Shell Network Alpha-Epsilon',
         invoices: loopInvoices.filter(i => i.id.startsWith('INV-LOOP')),
-        totalMismatch: 900000, 
+        totalMismatch: 180000, 
         severity: 'CRITICAL'
       },
       {
         id: 'FRAUD-RING-91',
-        title: 'Zenith Cluster',
+        title: 'Zenith Cluster Analysis',
         invoices: loopInvoices.filter(i => i.id === 'INV-2024-003'),
         totalMismatch: 36000,
         severity: 'HIGH'
@@ -187,8 +170,8 @@ export default function AnalyticsPage() {
                        
                        <div className="mt-4 grid grid-cols-2 gap-4 border-t border-destructive/20 pt-4">
                           <div className="space-y-1">
-                             <p className="text-[9px] uppercase text-muted-foreground font-bold">Volume</p>
-                             <p className="text-xs font-mono">₹{cluster.invoices.reduce((acc, i) => acc + i.totalAmount, 0).toLocaleString()}</p>
+                             <p className="text-[9px] uppercase text-muted-foreground font-bold">Involved Nodes</p>
+                             <p className="text-xs font-mono">{cluster.invoices.length} Entities</p>
                           </div>
                           <div className="space-y-1">
                              <p className="text-[9px] uppercase text-destructive font-bold">Tax Mismatch</p>
@@ -199,22 +182,17 @@ export default function AnalyticsPage() {
                        <div className="mt-4 flex flex-col gap-2">
                           <Button variant="outline" className="w-full text-[10px] h-7 gap-2 bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive hover:text-white" asChild>
                              <a href="https://selfservice.gst.gov.in/selfservice/" target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-3 w-3" /> File Complaint
+                                <ExternalLink className="h-3 w-3" /> File Portal Complaint
                              </a>
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            className="w-full text-[10px] h-7 gap-2 border border-white/5 font-bold"
-                            onClick={() => handleDownloadAudit(cluster.id)}
-                            disabled={generatingId === cluster.id}
-                          >
-                             {generatingId === cluster.id ? (
-                               <Loader2 className="h-3 w-3 animate-spin" />
-                             ) : (
-                               <FileWarning className="h-3 w-3" />
-                             )}
-                             {generatingId === cluster.id ? 'Analyzing...' : 'Audit PDF'}
-                          </Button>
+                          <Link href={`/audit/${cluster.id}`}>
+                            <Button 
+                              variant="ghost" 
+                              className="w-full text-[10px] h-7 gap-2 border border-white/5 font-bold hover:bg-white hover:text-black transition-all"
+                            >
+                               <FileSearch className="h-3 w-3" /> View Audit Report
+                            </Button>
+                          </Link>
                        </div>
                     </div>
                   ))}
