@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { 
   LayoutDashboard, 
@@ -6,7 +7,8 @@ import {
   Search, 
   Database, 
   Settings,
-  Menu
+  Activity,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -17,6 +19,8 @@ const navItems = [
   { name: 'Investigation', icon: Search, href: '/investigate' },
   { name: 'Data Upload', icon: UploadCloud, href: '/upload' },
   { name: 'Knowledge Graph', icon: Database, href: '/graph' },
+  { name: 'Analytics', icon: Activity, href: '/analytics' },
+  { name: 'Alerts', icon: Bell, href: '/alerts' },
 ];
 
 export function MainSidebar() {
