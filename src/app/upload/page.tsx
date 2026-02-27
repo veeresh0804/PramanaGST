@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { UploadCloud, FileText, CheckCircle, Info, Database, Loader2, Zap, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ export default function UploadPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const steps = [
     "Normalizing CSV schema...",
@@ -30,15 +30,15 @@ export default function UploadPage() {
     let localProgress = 0;
     const totalSteps = steps.length;
     
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       localProgress += 4;
       
       if (localProgress >= 100) {
-        clearInterval(interval);
-        // Important: Update states outside of any functional logic to avoid side-effect warnings
+        if (intervalRef.current) clearInterval(intervalRef.current);
         setProgress(100);
         setIsProcessing(false);
         setCurrentStep(null);
+        // We trigger the toast here, which is safe inside an event handler's asynchronous callback
         toast({
           title: "Matching Engine Complete",
           description: "Successfully processed 1,240 records. 12 risk flags raised.",
@@ -50,6 +50,12 @@ export default function UploadPage() {
       }
     }, 150);
   };
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-top-2 duration-500">
@@ -130,7 +136,7 @@ export default function UploadPage() {
                       onClick={handleExecuteMatch}
                       disabled={isProcessing}
                     >
-                      {isProcessing ? null : <Zap className="h-3 w-3" />}
+                      {!isProcessing && <Zap className="h-3 w-3" />}
                       {isProcessing ? "Reconciling..." : "Run Engine"}
                     </Button>
                  </div>

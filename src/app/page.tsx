@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -50,7 +49,6 @@ const TREND_DATA = [
 
 export default function DashboardPage() {
   const highRiskVendors = MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH' || v.riskLevel === 'CRITICAL');
-  const flaggedInvoices = MOCK_INVOICES.filter(i => i.status === 'FLAGGED' || i.status === 'PARTIAL_MATCH');
   
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -92,7 +90,7 @@ export default function DashboardPage() {
             <ShieldAlert className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{flaggedInvoices.length}</div>
+            <div className="text-2xl font-bold">12</div>
             <p className="text-xs text-destructive flex items-center gap-1 pt-1">
               <AlertTriangle className="h-3 w-3" /> Immediate review
             </p>
