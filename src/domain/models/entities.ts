@@ -3,7 +3,6 @@ export type GSTIN = string;
 
 export type InvoiceStatus = 'MATCHED' | 'PARTIAL_MATCH' | 'FAILED' | 'FLAGGED' | 'UNMATCHED';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-export type MatchType = 'EXACT' | 'FUZZY' | 'ML' | 'NONE' | 'IRN_LINKED';
 
 /**
  * SSD Section 10: Knowledge Graph Model Node Labels
@@ -11,7 +10,7 @@ export type MatchType = 'EXACT' | 'FUZZY' | 'ML' | 'NONE' | 'IRN_LINKED';
 export type GraphNodeType = 'TAXPAYER' | 'INVOICE' | 'RETURN' | 'PAYMENT' | 'IRN';
 
 /**
- * SSD Section 6.2: Required Relationships
+ * SSD Section 6.2: Required Relationships (Deterministic Traversal)
  */
 export type GraphEdgeType = 
   | 'ISSUED' 
@@ -57,17 +56,6 @@ export interface Vendor {
   };
 }
 
-export interface RiskAssessment {
-  vendorGstin: GSTIN;
-  riskScore: number;
-  riskLevel: RiskLevel;
-  contributingFactors: string[];
-  graphEvidence?: {
-    nodes: GraphNode[];
-    edges: GraphEdge[];
-  };
-}
-
 export interface GraphNode {
   id: string;
   label: string;
@@ -81,4 +69,15 @@ export interface GraphEdge {
   target: string;
   type: GraphEdgeType;
   properties?: Record<string, any>;
+}
+
+export interface RiskAssessment {
+  vendorGstin: GSTIN;
+  riskScore: number;
+  riskLevel: RiskLevel;
+  contributingFactors: string[];
+  graphEvidence?: {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+  };
 }

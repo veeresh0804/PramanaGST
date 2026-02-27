@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ShieldAlert, 
   ArrowLeft, 
-  FileText,
   IndianRupee,
-  Network,
   Zap,
   Hash,
   ShieldCheck,
-  GitBranch
+  GitBranch,
+  Search,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
@@ -24,12 +24,17 @@ interface InvestigationPageProps {
   params: Promise<{ id: string }>;
 }
 
+/**
+ * SSD Section 5: Investigation Module
+ * Implements Relationship validation & tax chain evidence traversal.
+ */
 export default async function InvestigationPage({ params }: InvestigationPageProps) {
   const { id } = await params;
   const invoice = MOCK_INVOICES.find(i => i.id === id) || MOCK_INVOICES[0];
   const assessment = MOCK_RISK_ASSESSMENTS.find(a => a.vendorGstin === invoice.vendorGstin) || MOCK_RISK_ASSESSMENTS[0];
   const vendor = MOCK_VENDORS.find(v => v.gstin === invoice.vendorGstin);
 
+  // SSD Contract 4: Triggering Explainability Layer with Graph Evidence
   const aiExplanation = await explainInvoiceFlag({
     invoiceId: invoice.id,
     status: invoice.status,
@@ -50,7 +55,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
             <h1 className="font-headline text-3xl font-bold tracking-tight">
               Case Analysis: {invoice.id}
             </h1>
-            <p className="text-muted-foreground">Pramāṇa Traversal: Relationship validation & tax chain evidence.</p>
+            <p className="text-muted-foreground">Pramāṇa Engine: Deterministic graph traversal & relationship validation.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -59,7 +64,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
           </Badge>
           <Badge variant="secondary" className={cn(
             "uppercase font-bold tracking-widest text-[10px] px-3",
-            invoice.status === 'FLAGGED' ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+            invoice.status === 'FLAGGED' ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-secondary/10 text-secondary border-secondary/20"
           )}>
             {invoice.status}
           </Badge>
@@ -80,7 +85,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                 <CardHeader className="border-b bg-muted/20">
                   <CardTitle className="text-lg font-medium flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    Relationship Validation
+                    Pramāṇa (Proof-Based) Evidence
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 grid grid-cols-2 gap-8 md:grid-cols-4">
@@ -122,16 +127,19 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
               <div className="grid gap-6 md:grid-cols-2">
                 <Card className="bg-card/50 border">
                   <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Reconciliation Adapter</CardTitle>
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Network Coverage</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">IRN Linkage Key</span>
+                        <span className="text-muted-foreground">Traversal Key</span>
                         <Badge variant="outline" className="text-secondary border-secondary/20 font-mono text-[10px]">VERIFIED</Badge>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Traversal Confidence</span>
-                        <span className="font-mono text-primary">94.2%</span>
+                        <span className="text-muted-foreground">Payment Coverage</span>
+                        <span className={cn(
+                          "font-mono",
+                          (invoice.paymentCoverageRatio || 0) < 1.0 ? "text-destructive" : "text-secondary"
+                        )}>{(invoice.paymentCoverageRatio || 0) * 100}%</span>
                      </div>
                   </CardContent>
                 </Card>
@@ -146,7 +154,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                         <span className="font-mono text-destructive">{(vendor?.networkMetrics?.clusterRisk || 0) * 100}%</span>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Registration</span>
+                        <span className="text-muted-foreground">Registration Type</span>
                         <span className="font-mono">{vendor?.registrationType || 'Regular'}</span>
                      </div>
                   </CardContent>
@@ -156,19 +164,19 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
 
             <TabsContent value="schema" className="mt-6">
               <Card className="bg-card/50 border p-6">
-                <h3 className="text-lg font-bold mb-4">Contract-1 Entity Mapping</h3>
+                <h3 className="text-lg font-bold mb-4">SSD Section 10: Graph Schema Mapping</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 border-b pb-4">
                     <span className="text-xs font-bold text-muted-foreground">TAXPAYER_GSTIN</span>
                     <span className="text-sm font-mono">{invoice.vendorGstin}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                    <span className="text-xs font-bold text-muted-foreground">IRN_REFERENCE</span>
-                    <span className="text-sm font-mono truncate">{invoice.irn || 'NULL'}</span>
+                    <span className="text-xs font-bold text-muted-foreground">INVOICE_NODE</span>
+                    <span className="text-sm font-mono">{invoice.invoiceNumber}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <span className="text-xs font-bold text-muted-foreground">PAYMENT_CONSISTENCY</span>
-                    <span className="text-sm font-mono">{(invoice.paymentCoverageRatio || 0) * 100}%</span>
+                    <span className="text-xs font-bold text-muted-foreground">RELATIONSHIP_PATH</span>
+                    <span className="text-sm font-mono italic">ISSUED -> HAS_IRN -> REPORTED_IN</span>
                   </div>
                 </div>
               </Card>
@@ -180,8 +188,15 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                     <div className="flex gap-4">
                        <GitBranch className="h-5 w-5 text-primary" />
                        <div>
-                          <p className="text-sm font-bold">Graph Path Validated</p>
-                          <p className="text-xs text-muted-foreground">Invoice -> IRN -> Return -> Payment path verified for Jan-2024.</p>
+                          <p className="text-sm font-bold">Path: ISSUED -> PAID_TAX Break</p>
+                          <p className="text-xs text-muted-foreground">Traversal halted at Return JAN-2024: Payment node missing for supplier GSTIN.</p>
+                       </div>
+                    </div>
+                    <div className="flex gap-4">
+                       <AlertTriangle className="h-5 w-5 text-destructive" />
+                       <div>
+                          <p className="text-sm font-bold">Anomaly: IRN Cancelled Post-Observation</p>
+                          <p className="text-xs text-muted-foreground">IRN node updated to status: CANCELLED on 2024-02-01. Mismatch detected.</p>
                        </div>
                     </div>
                  </div>
@@ -191,27 +206,39 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-card/50 border border-primary/20">
+          <Card className="bg-card/50 border border-primary/20 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <Zap className="h-4 w-4 text-primary" />
-                Pramāṇa AI Insight
+                <Search className="h-4 w-4 text-primary" />
+                Explainability Layer
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 relative">
+                <Zap className="absolute top-2 right-2 h-4 w-4 text-primary opacity-20" />
                 <p className="text-sm leading-relaxed italic text-foreground/90">
                   "{aiExplanation.explanation}"
                 </p>
+              </div>
+              <div className="pt-4 border-t border-white/5">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-3">Mismatch Logic</p>
+                <div className="space-y-2">
+                  {invoice.flags?.map((flag, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-xs">
+                      <div className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                      <span>{flag.replace(/_/g, ' ')}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Alert className="bg-destructive/5 border-destructive/20">
             <ShieldAlert className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-destructive font-bold">ITC Chain Alert</AlertTitle>
-            <AlertDescription className="text-sm">
-              SSD Traversal Alert: IRN cancelled post-filing. This indicates a "Mismatch Post-Evidence" scenario where IRN-linked credit is no longer valid.
+            <AlertTitle className="text-destructive font-bold">Critical Chain Alert</AlertTitle>
+            <AlertDescription className="text-xs">
+              This invoice is part of a "Circular Trading Cluster" (FRAUD-RING-72). Tax flows are looping back to primary entity without value addition.
             </AlertDescription>
           </Alert>
         </div>

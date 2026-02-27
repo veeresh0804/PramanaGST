@@ -3,6 +3,7 @@ import { Invoice, Vendor, RiskAssessment, GraphNode, GraphEdge } from '@/domain/
 
 /**
  * SSD Section 7: Dataset Design Rules (Relationship-consistent generation)
+ * Modeling real-world fraud scenarios: Circular Trading, ITC Chain Breaks, and IRN Cancellations.
  */
 export const MOCK_VENDORS: Vendor[] = [
   { 
@@ -52,7 +53,7 @@ export const MOCK_INVOICES: Invoice[] = [
     source: 'GSTR_1',
     status: 'FLAGGED',
     riskScore: 78,
-    flags: ['IRN_CANCELLED', 'UNDER_PAYMENT'],
+    flags: ['IRN_CANCELLED', 'ITC_CHAIN_BROKEN'],
     irn: '5af67...b12',
     einvoiceStatus: 'Cancelled',
     paymentCoverageRatio: 0.4
@@ -74,6 +75,25 @@ export const MOCK_INVOICES: Invoice[] = [
     irn: 'c12d3...e90',
     einvoiceStatus: 'Generated',
     paymentCoverageRatio: 1.0
+  },
+  {
+    id: 'INV-2024-003',
+    invoiceNumber: 'ZM-4491',
+    vendorGstin: '19OPQRS3456T5U6',
+    recipientGstin: '29ABCDE1234F1Z5',
+    invoiceDate: new Date('2024-01-20'),
+    taxableAmount: 200000,
+    cgst: 18000,
+    sgst: 18000,
+    igst: 0,
+    totalAmount: 236000,
+    source: 'GSTR_1',
+    status: 'FLAGGED',
+    riskScore: 95,
+    flags: ['CIRCULAR_TRADING_LOOP', 'UNDER_PAYMENT'],
+    irn: 'f99a1...c01',
+    einvoiceStatus: 'Generated',
+    paymentCoverageRatio: 0.1
   }
 ];
 
@@ -82,10 +102,11 @@ export const MOCK_GRAPH_DATA = {
     { id: 'BUYER_ORG', label: 'Buyer Enterprise', type: 'TAXPAYER', riskLevel: 'LOW' },
     { id: 'V-29ABC', label: 'ABC Tech', type: 'TAXPAYER', riskLevel: 'HIGH' },
     { id: 'V-27FGH', label: 'Global Logistics', type: 'TAXPAYER', riskLevel: 'LOW' },
+    { id: 'V-19OPQ', label: 'Zenith Marketing', type: 'TAXPAYER', riskLevel: 'CRITICAL' },
     { id: 'I-001', label: 'INV-1029', type: 'INVOICE', riskLevel: 'HIGH' },
     { id: 'I-002', label: 'INV-8821', type: 'INVOICE', riskLevel: 'LOW' },
+    { id: 'I-003', label: 'INV-4491', type: 'INVOICE', riskLevel: 'CRITICAL' },
     { id: 'IRN-001', label: 'IRN:5af6', type: 'IRN', riskLevel: 'CRITICAL' },
-    { id: 'IRN-002', label: 'IRN:c12d', type: 'IRN', riskLevel: 'LOW' },
     { id: 'RET-JAN-24', label: 'JAN-2024', type: 'RETURN', riskLevel: 'LOW' },
     { id: 'PAY-JAN-24', label: 'Tax Payment', type: 'PAYMENT', riskLevel: 'LOW' },
   ] as GraphNode[],
@@ -98,7 +119,9 @@ export const MOCK_GRAPH_DATA = {
     { source: 'RET-JAN-24', target: 'PAY-JAN-24', type: 'PAID_TAX' },
     { source: 'V-27FGH', target: 'I-002', type: 'ISSUED' },
     { source: 'I-002', target: 'BUYER_ORG', type: 'RECEIVED_BY' },
-    { source: 'I-002', target: 'IRN-002', type: 'HAS_IRN' },
+    { source: 'V-19OPQ', target: 'I-003', type: 'ISSUED' },
+    { source: 'I-003', target: 'V-29ABC', type: 'RECEIVED_BY' },
+    { source: 'V-29ABC', target: 'V-19OPQ', type: 'ISSUED' }, // Circular Relationship
   ] as GraphEdge[]
 };
 
@@ -107,9 +130,9 @@ export const MOCK_RISK_ASSESSMENTS: RiskAssessment[] = MOCK_VENDORS.map(v => ({
   riskScore: v.riskScore,
   riskLevel: v.riskLevel,
   contributingFactors: [
-    'Graph path validation failed for tax payment chain',
-    'Circular trading loop detected in peer cluster',
-    'IRN status cancelled post-ITC claiming'
+    'Deterministic graph traversal found break in tax payment chain',
+    'Neo4j cluster detection identified circular trading loop (FRAUD-LOOP-72)',
+    'IRN status changed to CANCELLED post-claim'
   ],
   graphEvidence: MOCK_GRAPH_DATA
 }));

@@ -1,8 +1,8 @@
 
 'use server';
 /**
- * @fileOverview A Genkit flow to generate a concise "Pramāṇa" (proof-based) explanation.
- * Adheres to SSD Section 6 (Explainability Layer).
+ * @fileOverview SSD Section 6: Explainability Layer (LLM Integration).
+ * Generates audit-ready, proof-based (Pramāṇa) reasoning from graph evidence.
  */
 
 import {ai} from '@/ai/genkit';
@@ -33,16 +33,17 @@ const invoiceFlagExplanationPrompt = ai.definePrompt({
   name: 'invoiceFlagExplanationPrompt',
   input: {schema: InvoiceFlagExplanationInputSchema},
   output: {schema: InvoiceFlagExplanationOutputSchema},
-  prompt: `You are the Pramāṇa GST Auditor. Your task is to provide a deterministic explanation for the status of invoice {{{invoiceId}}} based on Knowledge Graph traversal evidence.
+  prompt: `You are the Pramāṇa GST Auditor. Your task is to provide a deterministic, audit-ready explanation for the status of invoice {{{invoiceId}}} based on Knowledge Graph evidence.
 
 Status: {{{status}}}
 Risk Score: {{{riskScore}}}/100
-Traversal Evidence:
+Traversal Evidence factors:
 {{#each factors}}
 - {{{this}}}
 {{/each}}
 
-Explain in 1-2 sentences how the graph relationships (ISSUED, PAID_TAX, HAS_IRN) support this risk assessment. Use professional, audit-ready language.
+Task:
+Provide a concise (2-3 sentences) risk summary. Focus on how relationships (ISSUED, PAID_TAX, HAS_IRN) either validate the flow or surface anomalies like circular loops or chain breaks.
 
 Explanation:`,
 });
