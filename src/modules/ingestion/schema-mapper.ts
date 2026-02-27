@@ -1,46 +1,56 @@
 
-import { Invoice, Vendor, GSTIN } from '@/domain/models/entities';
+import { Invoice, GSTIN } from '@/domain/models/entities';
 
 /**
- * @fileOverview Schema Adapter Layer
- * Responsibilities:
- * - Map raw CSV-style data to internal domain models.
- * - Calculate derived fraud features.
- * - Ensure backward compatibility with existing UI.
+ * SSD Section 9: Ingestion Layer Responsibilities
+ * Implements Contract 1: Normalizing raw dataset records to domain entities.
  */
-
 export class SchemaMapper {
-  static mapGSTR1ToInvoice(raw: any, einvoiceStatus?: string): Invoice {
-    const totalTax = (raw.cgst_amount || 0) + (raw.sgst_amount || 0) + (raw.igst_amount || 0);
+  static mapGSTR1ToInvoice(raw: any): Invoice {
+    const cgst = parseFloat(raw.cgst_amount || 0);
+    const sgst = parseFloat(raw.sgst_amount || 0);
+    const igst = parseFloat(raw.igst_amount || 0);
+    const totalTax = cgst + sgst + igst;
     
+    // SSD Derived Field Calculation
+    const invoiceValue = parseFloat(raw.invoice_value || 0);
+    const taxableAmount = invoiceValue - totalTax;
+
     return {
       id: `INV-${raw.invoice_number}`,
       invoiceNumber: raw.invoice_number,
       vendorGstin: raw.supplier_gstin,
       recipientGstin: raw.recipient_gstin,
       invoiceDate: new Date(raw.invoice_date),
-      taxableAmount: raw.invoice_value - totalTax,
-      cgst: raw.cgst_amount || 0,
-      sgst: raw.sgst_amount || 0,
-      igst: raw.igst_amount || 0,
-      totalAmount: raw.invoice_value,
+      taxableAmount,
+      cgst,
+      sgst,
+      igst,
+      totalAmount: invoiceValue,
       source: 'GSTR_1',
-      status: einvoiceStatus === 'Cancelled' ? 'FLAGGED' : 'MATCHED',
-      riskScore: einvoiceStatus === 'Cancelled' ? 85 : 10,
+      status: 'MATCHED', // Default, updated by reconciliation traversal
+      riskScore: 0,
       irn: raw.irn,
-      einvoiceStatus: (einvoiceStatus as any) || 'Generated',
-      flags: einvoiceStatus === 'Cancelled' ? ['IRN_CANCELLED'] : []
+      einvoiceStatus: raw.irn ? 'Generated' : 'Missing',
+      flags: []
     };
   }
 
-  static calculateRiskFlags(invoice: Invoice, payment: number, itc: number): string[] {
-    const flags: string[] = [];
-    const totalTax = invoice.cgst + invoice.sgst + invoice.igst;
-    
-    if (payment < totalTax) flags.push('UNDER_PAYMENT');
-    if (itc > payment) flags.push('EXCESS_ITC_CLAIM');
-    if (!invoice.irn) flags.push('IRN_MISSING');
-    
-    return flags;
+  /**
+   * SSD Derived Feature: Payment Coverage Ratio
+   * Derived from payments.tax_paid vs gstr1 tax liability
+   */
+  static calculatePaymentCoverage(taxPaid: number, taxLiability: number): number {
+    if (taxLiability <= 0) return 1.0;
+    return Math.min(taxPaid / taxLiability, 1.0);
+  }
+
+  /**
+   * SSD Derived Feature: ITC to Tax Ratio
+   * itc_claimed / total_tax
+   */
+  static calculateITCRatio(itcClaimed: number, totalTax: number): number {
+    if (totalTax <= 0) return 0;
+    return itcClaimed / totalTax;
   }
 }

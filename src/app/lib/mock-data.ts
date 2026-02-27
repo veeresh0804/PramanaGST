@@ -1,6 +1,9 @@
 
 import { Invoice, Vendor, RiskAssessment, GraphNode, GraphEdge } from '@/domain/models/entities';
 
+/**
+ * SSD Section 7: Dataset Design Rules (Relationship-consistent generation)
+ */
 export const MOCK_VENDORS: Vendor[] = [
   { 
     gstin: '29ABCDE1234F1Z5', 
@@ -18,19 +21,9 @@ export const MOCK_VENDORS: Vendor[] = [
     legalName: 'Global Logistics Solutions LLP',
     stateCode: '27',
     registrationType: 'Regular',
-    riskScore: 34, 
+    riskScore: 22, 
     riskLevel: 'LOW',
     networkMetrics: { chainDepth: 2, clusterRisk: 0.15, degreeCentrality: 4 }
-  },
-  { 
-    gstin: '07JKLMN9012P3Q4', 
-    name: 'Prime Manufacturing Corp', 
-    legalName: 'Prime Manufacturing Corporation',
-    stateCode: '07',
-    registrationType: 'Composition',
-    riskScore: 56, 
-    riskLevel: 'MEDIUM',
-    networkMetrics: { chainDepth: 3, clusterRisk: 0.45, degreeCentrality: 8 }
   },
   { 
     gstin: '19OPQRS3456T5U6', 
@@ -38,7 +31,7 @@ export const MOCK_VENDORS: Vendor[] = [
     legalName: 'Zenith Marketing India Pvt Ltd',
     stateCode: '19',
     registrationType: 'Regular',
-    riskScore: 91, 
+    riskScore: 94, 
     riskLevel: 'CRITICAL',
     networkMetrics: { chainDepth: 8, clusterRisk: 0.95, degreeCentrality: 22 }
   },
@@ -81,53 +74,42 @@ export const MOCK_INVOICES: Invoice[] = [
     irn: 'c12d3...e90',
     einvoiceStatus: 'Generated',
     paymentCoverageRatio: 1.0
-  },
-  {
-    id: 'INV-2024-003',
-    invoiceNumber: 'PM-9932',
-    vendorGstin: '07JKLMN9012P3Q4',
-    invoiceDate: new Date('2024-01-20'),
-    taxableAmount: 25000,
-    cgst: 2250,
-    sgst: 2250,
-    igst: 0,
-    totalAmount: 29500,
-    source: 'GSTR_1',
-    status: 'PARTIAL_MATCH',
-    riskScore: 45,
-    flags: ['IRN_MISSING'],
-    einvoiceStatus: 'Missing',
-    paymentCoverageRatio: 0.9
   }
 ];
+
+export const MOCK_GRAPH_DATA = {
+  nodes: [
+    { id: 'BUYER_ORG', label: 'Buyer Enterprise', type: 'TAXPAYER', riskLevel: 'LOW' },
+    { id: 'V-29ABC', label: 'ABC Tech', type: 'TAXPAYER', riskLevel: 'HIGH' },
+    { id: 'V-27FGH', label: 'Global Logistics', type: 'TAXPAYER', riskLevel: 'LOW' },
+    { id: 'I-001', label: 'INV-1029', type: 'INVOICE', riskLevel: 'HIGH' },
+    { id: 'I-002', label: 'INV-8821', type: 'INVOICE', riskLevel: 'LOW' },
+    { id: 'IRN-001', label: 'IRN:5af6', type: 'IRN', riskLevel: 'CRITICAL' },
+    { id: 'IRN-002', label: 'IRN:c12d', type: 'IRN', riskLevel: 'LOW' },
+    { id: 'RET-JAN-24', label: 'JAN-2024', type: 'RETURN', riskLevel: 'LOW' },
+    { id: 'PAY-JAN-24', label: 'Tax Payment', type: 'PAYMENT', riskLevel: 'LOW' },
+  ] as GraphNode[],
+  links: [
+    { source: 'V-29ABC', target: 'I-001', type: 'ISSUED' },
+    { source: 'I-001', target: 'BUYER_ORG', type: 'RECEIVED_BY' },
+    { source: 'I-001', target: 'IRN-001', type: 'HAS_IRN' },
+    { source: 'I-001', target: 'RET-JAN-24', type: 'REPORTED_IN' },
+    { source: 'V-29ABC', target: 'RET-JAN-24', type: 'PAID_TAX' },
+    { source: 'RET-JAN-24', target: 'PAY-JAN-24', type: 'PAID_TAX' },
+    { source: 'V-27FGH', target: 'I-002', type: 'ISSUED' },
+    { source: 'I-002', target: 'BUYER_ORG', type: 'RECEIVED_BY' },
+    { source: 'I-002', target: 'IRN-002', type: 'HAS_IRN' },
+  ] as GraphEdge[]
+};
 
 export const MOCK_RISK_ASSESSMENTS: RiskAssessment[] = MOCK_VENDORS.map(v => ({
   vendorGstin: v.gstin,
   riskScore: v.riskScore,
   riskLevel: v.riskLevel,
   contributingFactors: [
-    'Inconsistent IRN generation patterns',
-    'Detected circular trading patterns',
-    'Tax payment coverage ratio below industry average'
+    'Graph path validation failed for tax payment chain',
+    'Circular trading loop detected in peer cluster',
+    'IRN status cancelled post-ITC claiming'
   ],
-  rulesTriggered: [
-    { ruleId: 'IRN_CANCEL_FRAUD', weight: 0.5, scoreContribution: 40 },
-    { ruleId: 'PAYMENT_UNDER_THRESHOLD', weight: 0.3, scoreContribution: 20 }
-  ]
+  graphEvidence: MOCK_GRAPH_DATA
 }));
-
-export const MOCK_GRAPH_DATA = {
-  nodes: [
-    { id: 'ROOT_ORG', label: 'Enterprise Root', type: 'BUYER', riskLevel: 'LOW' },
-    { id: 'V-29ABC', label: 'ABC Tech', type: 'VENDOR', riskLevel: 'HIGH' },
-    { id: 'I-001', label: 'INV-001', type: 'INVOICE', riskLevel: 'HIGH' },
-    { id: 'IRN-001', label: 'IRN:5af6', type: 'IRN', riskLevel: 'CRITICAL' },
-    { id: 'RP-2024-01', label: 'Jan 2024', type: 'RETURN', riskLevel: 'LOW' },
-  ] as GraphNode[],
-  links: [
-    { source: 'ROOT_ORG', target: 'I-001', type: 'MATCHED_WITH' },
-    { source: 'I-001', target: 'V-29ABC', type: 'REPORTED_IN' },
-    { source: 'I-001', target: 'IRN-001', type: 'HAS_IRN' },
-    { source: 'V-29ABC', target: 'RP-2024-01', type: 'TAX_PAYMENT_FOUND' },
-  ] as GraphEdge[]
-};

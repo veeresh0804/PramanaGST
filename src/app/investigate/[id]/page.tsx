@@ -1,6 +1,6 @@
 
 import { MOCK_INVOICES, MOCK_RISK_ASSESSMENTS, MOCK_VENDORS } from '@/app/lib/mock-data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,14 +8,12 @@ import {
   ShieldAlert, 
   ArrowLeft, 
   FileText,
-  User,
-  Calendar,
   IndianRupee,
   Network,
-  Scale,
   Zap,
   Hash,
-  ShieldCheck
+  ShieldCheck,
+  GitBranch
 } from 'lucide-react';
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
@@ -52,7 +50,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
             <h1 className="font-headline text-3xl font-bold tracking-tight">
               Case Analysis: {invoice.id}
             </h1>
-            <p className="text-muted-foreground">Detailed investigation into IRN lineage and tax payment coverage.</p>
+            <p className="text-muted-foreground">Pramāṇa Traversal: Relationship validation & tax chain evidence.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -72,8 +70,8 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-muted/20">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="schema">Dataset Schema</TabsTrigger>
+              <TabsTrigger value="overview">Evidence</TabsTrigger>
+              <TabsTrigger value="schema">Graph Context</TabsTrigger>
               <TabsTrigger value="audit">Audit Log</TabsTrigger>
             </TabsList>
             
@@ -81,14 +79,14 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
               <Card className="bg-card/50 border">
                 <CardHeader className="border-b bg-muted/20">
                   <CardTitle className="text-lg font-medium flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    Transaction Integrity
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Relationship Validation
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 grid grid-cols-2 gap-8 md:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <Hash className="h-3 w-3" /> IRN Status
+                      <Hash className="h-3 w-3" /> IRN Node
                     </p>
                     <Badge variant="outline" className={cn(
                       "text-[10px]",
@@ -99,13 +97,13 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <Scale className="h-3 w-3" /> Payment Ratio
+                      <GitBranch className="h-3 w-3" /> Traversal Depth
                     </p>
-                    <p className="text-sm font-medium">{(invoice.paymentCoverageRatio || 0.85) * 100}%</p>
+                    <p className="text-sm font-medium">{vendor?.networkMetrics?.chainDepth || 0} Layers</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <IndianRupee className="h-3 w-3" /> Gross Value
+                      <IndianRupee className="h-3 w-3" /> Tax Value
                     </p>
                     <p className="text-sm font-medium">₹{invoice.totalAmount.toLocaleString()}</p>
                   </div>
@@ -124,31 +122,31 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
               <div className="grid gap-6 md:grid-cols-2">
                 <Card className="bg-card/50 border">
                   <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Compliance Adapter</CardTitle>
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Reconciliation Adapter</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">IRN Linkage</span>
-                        <Badge variant="outline" className="text-secondary border-secondary/20">VERIFIED</Badge>
+                        <span className="text-muted-foreground">IRN Linkage Key</span>
+                        <Badge variant="outline" className="text-secondary border-secondary/20 font-mono text-[10px]">VERIFIED</Badge>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Tax Match Confidence</span>
-                        <span className="font-mono">94%</span>
+                        <span className="text-muted-foreground">Traversal Confidence</span>
+                        <span className="font-mono text-primary">94.2%</span>
                      </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-card/50 border">
                   <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Network Integrity</CardTitle>
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Entity Integrity</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Chain Depth</span>
-                        <span className="font-mono">{vendor?.networkMetrics?.chainDepth || 0}</span>
+                        <span className="text-muted-foreground">Cluster Risk</span>
+                        <span className="font-mono text-destructive">{(vendor?.networkMetrics?.clusterRisk || 0) * 100}%</span>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Registration Type</span>
+                        <span className="text-muted-foreground">Registration</span>
                         <span className="font-mono">{vendor?.registrationType || 'Regular'}</span>
                      </div>
                   </CardContent>
@@ -158,19 +156,19 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
 
             <TabsContent value="schema" className="mt-6">
               <Card className="bg-card/50 border p-6">
-                <h3 className="text-lg font-bold mb-4">Migration Schema Mapping</h3>
+                <h3 className="text-lg font-bold mb-4">Contract-1 Entity Mapping</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                    <span className="text-xs font-bold text-muted-foreground">GSTR-1 Recipient</span>
-                    <span className="text-sm font-mono">{invoice.recipientGstin || 'N/A'}</span>
+                    <span className="text-xs font-bold text-muted-foreground">TAXPAYER_GSTIN</span>
+                    <span className="text-sm font-mono">{invoice.vendorGstin}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                    <span className="text-xs font-bold text-muted-foreground">IRN Reference</span>
-                    <span className="text-sm font-mono truncate">{invoice.irn || 'Missing'}</span>
+                    <span className="text-xs font-bold text-muted-foreground">IRN_REFERENCE</span>
+                    <span className="text-sm font-mono truncate">{invoice.irn || 'NULL'}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <span className="text-xs font-bold text-muted-foreground">ITC Ratio</span>
-                    <span className="text-sm font-mono">{(invoice.itcClaimed || 0) / (invoice.totalAmount * 0.18 || 1) * 100}%</span>
+                    <span className="text-xs font-bold text-muted-foreground">PAYMENT_CONSISTENCY</span>
+                    <span className="text-sm font-mono">{(invoice.paymentCoverageRatio || 0) * 100}%</span>
                   </div>
                 </div>
               </Card>
@@ -180,10 +178,10 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
               <Card className="bg-card/50 border p-6">
                  <div className="space-y-4">
                     <div className="flex gap-4">
-                       <ShieldCheck className="h-5 w-5 text-secondary" />
+                       <GitBranch className="h-5 w-5 text-primary" />
                        <div>
-                          <p className="text-sm font-bold">Schema Validation Passed</p>
-                          <p className="text-xs text-muted-foreground">Mapped via IngestionAdapter V2.0</p>
+                          <p className="text-sm font-bold">Graph Path Validated</p>
+                          <p className="text-xs text-muted-foreground">Invoice -> IRN -> Return -> Payment path verified for Jan-2024.</p>
                        </div>
                     </div>
                  </div>
@@ -197,7 +195,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-medium flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                Explainable AI Insight
+                Pramāṇa AI Insight
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -211,9 +209,9 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
 
           <Alert className="bg-destructive/5 border-destructive/20">
             <ShieldAlert className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-destructive font-bold">IRN Compliance Alert</AlertTitle>
+            <AlertTitle className="text-destructive font-bold">ITC Chain Alert</AlertTitle>
             <AlertDescription className="text-sm">
-              Invoice found in GSTR-1 but IRN status is 'Cancelled'. This suggests a potential attempt to claim ITC on a deleted transaction.
+              SSD Traversal Alert: IRN cancelled post-filing. This indicates a "Mismatch Post-Evidence" scenario where IRN-linked credit is no longer valid.
             </AlertDescription>
           </Alert>
         </div>

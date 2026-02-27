@@ -3,14 +3,13 @@
 
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Database, Share2, Search, Filter, Network, ShieldAlert, Zap } from 'lucide-react';
+import { Database, Search, Filter, Network, ShieldAlert, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MOCK_GRAPH_DATA } from '../lib/mock-data';
 import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 
-// Dynamic import for react-force-graph as it's client-side only
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 export default function KnowledgeGraphPage() {
@@ -34,15 +33,22 @@ export default function KnowledgeGraphPage() {
   }, []);
 
   const graphData = useMemo(() => {
+    const nodeColors: Record<string, string> = {
+      TAXPAYER: '#5AC2FF',
+      INVOICE: '#4DE0E6',
+      IRN: '#f59e0b',
+      RETURN: '#10b981',
+      PAYMENT: '#8b5cf6'
+    };
+
     return {
       nodes: MOCK_GRAPH_DATA.nodes.map(n => ({
         ...n,
-        color: n.riskLevel === 'CRITICAL' ? '#ef4444' : n.riskLevel === 'HIGH' ? '#f59e0b' : '#5AC2FF',
-        val: n.type === 'BUYER' ? 10 : 5
+        color: n.riskLevel === 'CRITICAL' ? '#ef4444' : nodeColors[n.type] || '#fff',
+        size: n.type === 'TAXPAYER' ? 8 : 4
       })),
       links: MOCK_GRAPH_DATA.links.map(l => ({
-        source: l.source,
-        target: l.target,
+        ...l,
         label: l.type
       }))
     };
@@ -54,16 +60,16 @@ export default function KnowledgeGraphPage() {
     <div className="space-y-8 animate-in fade-in duration-700 h-full flex flex-col">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="font-headline text-3xl font-bold tracking-tight">Enterprise Knowledge Graph</h1>
-          <p className="text-muted-foreground">Exploring entity relationships, tax flow patterns, and circular trading networks.</p>
+          <h1 className="font-headline text-3xl font-bold tracking-tight">Pramāṇa Graph Explorer</h1>
+          <p className="text-muted-foreground">Deterministic traversal of tax flows, IRN linkage, and circular trading networks.</p>
         </div>
         <div className="flex gap-2">
           <div className="relative w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-8 bg-card/50" placeholder="Search entity or GSTIN..." />
+            <Input className="pl-8 bg-card/50" placeholder="Search GSTIN or IRN..." />
           </div>
           <Button variant="secondary" className="gap-2">
-            <Filter className="h-4 w-4" /> Filter Clusters
+            <Filter className="h-4 w-4" /> Filter Nodes
           </Button>
         </div>
       </div>
@@ -75,105 +81,83 @@ export default function KnowledgeGraphPage() {
             width={dimensions.width}
             height={dimensions.height}
             backgroundColor="#1D2126"
-            nodeLabel="label"
+            nodeLabel={(node: any) => `${node.type}: ${node.label}`}
             nodeColor="color"
             nodeRelSize={6}
-            linkColor={() => 'rgba(255,255,255,0.1)'}
+            linkColor={() => 'rgba(255,255,255,0.15)'}
             linkDirectionalParticles={2}
-            linkDirectionalParticleSpeed={0.01}
+            linkDirectionalArrowLength={3}
+            linkDirectionalArrowRelPos={1}
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.label;
-              const fontSize = 12 / globalScale;
+              const fontSize = 10 / globalScale;
               ctx.font = `${fontSize}px Inter`;
-              const textWidth = ctx.measureText(label).width;
-              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
-
+              
               ctx.fillStyle = node.color;
               ctx.beginPath();
-              ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
+              ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
               ctx.fill();
 
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-              ctx.fillText(label, node.x - textWidth / 2, node.y + 10);
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+              ctx.fillText(label, node.x - ctx.measureText(label).width / 2, node.y + node.size + 4);
             }}
           />
           
           <div className="absolute top-6 right-6 text-[10px] font-bold tracking-widest text-muted-foreground uppercase bg-black/40 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm">
-            Live Nodes: {MOCK_GRAPH_DATA.nodes.length} • Latency: 14ms
+            Knowledge Engine: ACTIVE • Nodes: {MOCK_GRAPH_DATA.nodes.length}
           </div>
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-card/50 border shadow-sm">
+          <Card className="bg-card/50 border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Network className="h-4 w-4 text-primary" />
-                Network Intelligence
+                Traversal Metrics
               </CardTitle>
-              <CardDescription className="text-[10px]">Graph metrics derived from Neo4j engine.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Topology Health</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Topology State</p>
                 <div className="flex items-center gap-2">
-                   <p className="text-sm font-medium">Optimal Clustering</p>
-                   <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[8px] px-1 h-4">STABLE</Badge>
+                   <p className="text-sm font-medium">Deterministic</p>
+                   <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[8px] h-4">SYNCED</Badge>
                 </div>
               </div>
-              <div className="space-y-2">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Active Communities</p>
-                <div className="flex gap-2">
-                  <div className="flex flex-col items-center">
-                    <div className="h-2 w-2 rounded-full bg-primary mb-1" />
-                    <span className="text-[8px]">CORE</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="h-2 w-2 rounded-full bg-secondary mb-1" />
-                    <span className="text-[8px]">V-NET</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="h-2 w-2 rounded-full bg-destructive mb-1" />
-                    <span className="text-[8px]">RISK</span>
-                  </div>
-                </div>
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                 <div className="flex items-center gap-3 text-xs">
+                    <div className="h-3 w-3 rounded bg-[#5AC2FF]" />
+                    <span>Taxpayer Entity</span>
+                 </div>
+                 <div className="flex items-center gap-3 text-xs">
+                    <div className="h-3 w-3 rounded bg-[#4DE0E6]" />
+                    <span>Invoice Transaction</span>
+                 </div>
+                 <div className="flex items-center gap-3 text-xs">
+                    <div className="h-3 w-3 rounded bg-[#f59e0b]" />
+                    <span>IRN Node</span>
+                 </div>
+                 <div className="flex items-center gap-3 text-xs">
+                    <div className="h-3 w-3 rounded bg-[#8b5cf6]" />
+                    <span>Tax Payment</span>
+                 </div>
               </div>
-              <div className="pt-4 border-t border-white/5">
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  Anomaly Detection (Isolation Forest) has identified a high-degree cluster spanning 3 shell entities.
-                </p>
-              </div>
-              <Button size="sm" className="w-full text-[11px] h-8" variant="outline">Run Lineage Trace</Button>
+              <Button size="sm" className="w-full text-[11px] h-8 gap-2" variant="outline">
+                <GitBranch className="h-3 w-3" /> Trace Lineage
+              </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 border shadow-sm">
+          <Card className="bg-card/50 border border-destructive/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Share2 className="h-4 w-4 text-secondary" />
-                Legend & Schema
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-destructive">
+                <ShieldAlert className="h-4 w-4" /> Anomaly Detection
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 text-xs">
-                <div className="h-4 w-4 rounded bg-primary/20 border border-primary flex items-center justify-center" />
-                <span>Buyer Organization</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <div className="h-4 w-4 rounded bg-secondary/20 border border-secondary flex items-center justify-center" />
-                <span>Verified Vendor</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                 <ShieldAlert className="h-4 w-4 text-destructive" />
-                <span>Suspicious Pattern</span>
-              </div>
-              <div className="mt-4 p-2 rounded bg-muted/20 border border-white/5">
-                <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Relationship Strength</p>
-                <div className="flex items-center gap-1">
-                  <div className="h-[1px] flex-1 bg-white/10" />
-                  <div className="h-[2px] flex-1 bg-white/30" />
-                  <div className="h-[3px] flex-1 bg-primary/50" />
-                </div>
-              </div>
+            <CardContent>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Isolation Forest detected a high-degree loop involving 3 shell entities in the JAN-24 period. IRN cancellations triggered on path traversal.
+              </p>
             </CardContent>
           </Card>
         </div>

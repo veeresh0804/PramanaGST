@@ -5,6 +5,22 @@ export type InvoiceStatus = 'MATCHED' | 'PARTIAL_MATCH' | 'FAILED' | 'FLAGGED' |
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type MatchType = 'EXACT' | 'FUZZY' | 'ML' | 'NONE' | 'IRN_LINKED';
 
+/**
+ * SSD Section 10: Knowledge Graph Model Node Labels
+ */
+export type GraphNodeType = 'TAXPAYER' | 'INVOICE' | 'RETURN' | 'PAYMENT' | 'IRN';
+
+/**
+ * SSD Section 6.2: Required Relationships
+ */
+export type GraphEdgeType = 
+  | 'ISSUED' 
+  | 'RECEIVED_BY' 
+  | 'REPORTED_IN' 
+  | 'PAID_TAX' 
+  | 'HAS_IRN' 
+  | 'CLAIMED_IN';
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -16,11 +32,10 @@ export interface Invoice {
   sgst: number;
   igst: number;
   totalAmount: number;
-  source: 'PURCHASE_REGISTER' | 'GSTR_1' | 'GSTR_2A' | 'GSTR_2B';
+  source: 'GSTR_1' | 'GSTR_2A' | 'GSTR_2B' | 'PURCHASE_REGISTER';
   status: InvoiceStatus;
   riskScore: number;
   flags?: string[];
-  // New Schema Fields
   irn?: string;
   einvoiceStatus?: 'Generated' | 'Cancelled' | 'Missing';
   itcClaimed?: number;
@@ -47,22 +62,23 @@ export interface RiskAssessment {
   riskScore: number;
   riskLevel: RiskLevel;
   contributingFactors: string[];
-  rulesTriggered: {
-    ruleId: string;
-    weight: number;
-    scoreContribution: number;
-  }[];
+  graphEvidence?: {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+  };
 }
 
 export interface GraphNode {
   id: string;
   label: string;
-  type: 'VENDOR' | 'INVOICE' | 'BUYER' | 'RETURN' | 'IRN';
+  type: GraphNodeType;
   riskLevel?: RiskLevel;
+  properties?: Record<string, any>;
 }
 
 export interface GraphEdge {
   source: string;
   target: string;
-  type: 'REPORTED_IN' | 'PRESENT_IN' | 'TAX_PAYMENT_FOUND' | 'EWAY_BILL_LINKED' | 'MATCHED_WITH' | 'MISMATCH_WITH' | 'HAS_IRN' | 'CLAIMED_BY';
+  type: GraphEdgeType;
+  properties?: Record<string, any>;
 }
