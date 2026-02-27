@@ -1,5 +1,7 @@
+
 'use client';
 
+import { useState, useMemo } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -23,6 +25,15 @@ import {
 } from "@/components/ui/tooltip";
 
 export default function VendorsPage() {
+  const [search, setSearch] = useState('');
+
+  const filteredVendors = useMemo(() => {
+    return MOCK_VENDORS.filter(v => 
+      v.name.toLowerCase().includes(search.toLowerCase()) || 
+      v.gstin.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
+
   return (
     <div className="space-y-10 animate-in slide-in-from-bottom-2 duration-500 pb-10">
       <div className="flex items-end justify-between border-b border-border pb-6">
@@ -33,9 +44,16 @@ export default function VendorsPage() {
         <div className="flex gap-4 items-center">
            <div className="relative">
              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-             <Input placeholder="Search GSTIN..." className="pl-9 h-10 w-64 bg-white border-border rounded-sm" />
+             <Input 
+               placeholder="Search GSTIN or Name..." 
+               className="pl-9 h-10 w-64 bg-white border-border rounded-sm" 
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+             />
            </div>
-           <Button variant="outline" className="h-10 gap-2 border-border rounded-sm"><Filter className="h-4 w-4" /> Filter Risk</Button>
+           <Button variant="outline" className="h-10 gap-2 border-border rounded-sm">
+             <Filter className="h-4 w-4" /> Filter Risk
+           </Button>
         </div>
       </div>
 
@@ -44,8 +62,8 @@ export default function VendorsPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Verified Taxpayer Records</CardTitle>
             <div className="flex gap-4">
-              <span className="text-[10px] font-bold">Total: {MOCK_VENDORS.length}</span>
-              <span className="text-[10px] font-bold text-destructive">Critical Priority: {MOCK_VENDORS.filter(v => v.riskLevel === 'CRITICAL').length}</span>
+              <span className="text-[10px] font-bold">Results: {filteredVendors.length}</span>
+              <span className="text-[10px] font-bold text-destructive">Critical Priority: {filteredVendors.filter(v => v.riskLevel === 'CRITICAL').length}</span>
             </div>
           </div>
         </CardHeader>
@@ -61,7 +79,7 @@ export default function VendorsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_VENDORS.map((vendor) => (
+              {filteredVendors.map((vendor) => (
                 <TableRow key={vendor.gstin} className="hover:bg-muted/30 transition-colors border-b">
                   <TableCell className="font-bold text-sm py-5">{vendor.name}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">{vendor.gstin}</TableCell>
@@ -103,6 +121,13 @@ export default function VendorsPage() {
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredVendors.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-20 text-center text-muted-foreground italic">
+                    No taxpayer records found matching your query.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

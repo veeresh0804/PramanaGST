@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -33,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const { toast } = useToast();
@@ -52,6 +54,13 @@ export default function AnalyticsPage() {
     ].filter(c => c.invoices.length > 0);
   }, []);
 
+  const handleExport = () => {
+    toast({
+      title: "Export Initiated",
+      description: "Generating global statistical report. This may take a few moments.",
+    });
+  };
+
   if (!mounted) return null;
   if (!healthData) return <div className="p-20 text-center font-bold text-primary animate-pulse uppercase tracking-widest">CALCULATING ANALYTICAL METRICS...</div>;
 
@@ -62,7 +71,7 @@ export default function AnalyticsPage() {
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Pramāṇa Advanced Analytics</span>
           <h1 className="text-4xl font-extrabold tracking-tight text-primary">Predictive Modeling</h1>
         </div>
-        <Button variant="outline" className="border-border rounded-sm shadow-sm gap-2">
+        <Button variant="outline" className="border-border rounded-sm shadow-sm gap-2" onClick={handleExport}>
           <FileText className="h-4 w-4" /> Global Statistical Export
         </Button>
       </div>
