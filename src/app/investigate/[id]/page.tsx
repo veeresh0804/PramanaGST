@@ -159,9 +159,9 @@ export default function InvestigationPage() {
                     <div className="bg-slate-900 p-6 rounded-none font-mono text-xs text-green-400 leading-relaxed overflow-x-auto shadow-inner">
                        <p className="text-white/40 mb-2">// Trace network dependency risk</p>
                        MATCH (v:Vendor {"{gstin: '" + invoice.vendorGstin + "'}"})<br/>
-                       -[:ISSUED]->(i:Invoice {"{id: '" + invoice.id + "'}"})<br/>
-                       -[:CLAIMED_BY]->(m:Me)<br/>
-                       WHERE v.risk_score > 60<br/>
+                       -[:ISSUED]-&gt;(i:Invoice {"{id: '" + invoice.id + "'}"})<br/>
+                       -[:CLAIMED_BY]-&gt;(m:Me)<br/>
+                       WHERE v.risk_score &gt; 60<br/>
                        RETURN v, i, m
                     </div>
                  </CardContent>
