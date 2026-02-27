@@ -15,10 +15,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MOCK_GRAPH_DATA, MY_COMPANY_GSTIN } from '../lib/mock-data';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { MOCK_GRAPH_DATA, MOCK_VENDORS, MOCK_INVOICES } from '../lib/mock-data';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { CompanyTransactionPanel } from './company-transaction-panel';
+import { Vendor, Invoice } from '@/domain/models/entities';
 
 // Using dynamic import to prevent SSR issues with canvas-based react-force-graph
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
@@ -27,6 +29,9 @@ export default function KnowledgeGraphPage() {
   const [mounted, setMounted] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [vendorInvoices, setVendorInvoices] = useState<Invoice[]>([]);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const graphRef = useRef<any>(null);
 
   useEffect(() => {
@@ -47,13 +52,13 @@ export default function KnowledgeGraphPage() {
 
   const graphData = useMemo(() => {
     const nodeColors: Record<string, string> = {
-      ROOT_NODE: '#FFB347', // Muted Orange
-      SUPPLIER: '#FFB347',  // Muted Orange
-      BUYER: '#FF8A65',     // Coral
-      INVOICE: '#FFDAB9',   // Peach
-      IRN: '#90CAF9',       // Soft Blue
-      RETURN_PERIOD: '#F48FB1', // Soft Pink
-      PAYMENT: '#B39DDB'    // Soft Purple
+      ROOT_NODE: '#003366', // Deep Navy
+      SUPPLIER: '#0099CC',  // Cyan
+      BUYER: '#1E2A38',     // Slate
+      INVOICE: '#F1F5F9',   // Light Grey
+      IRN: '#94A3B8',       // Slate Grey
+      RETURN_PERIOD: '#E2E8F0', // Muted Blue
+      PAYMENT: '#CBD5E1'    // Grey
     };
 
     const nodes = MOCK_GRAPH_DATA.nodes.map(n => ({
@@ -72,6 +77,22 @@ export default function KnowledgeGraphPage() {
     };
   }, []);
 
+  const handleNodeClick = useCallback((node: any) => {
+    setSelectedNode(node);
+    
+    // Check if it's a company node to open the detailed transaction overlay
+    if (node.type === 'SUPPLIER' || node.type === 'BUYER' || node.type === 'ROOT_NODE') {
+      const vendor = MOCK_VENDORS.find(v => v.gstin === node.id);
+      if (vendor) {
+        setSelectedVendor(vendor);
+        // Filter invoices associated with this vendor
+        const invoices = MOCK_INVOICES.filter(inv => inv.vendorGstin === vendor.gstin || inv.recipientGstin === vendor.gstin);
+        setVendorInvoices(invoices);
+        setIsPanelOpen(true);
+      }
+    }
+  }, []);
+
   if (!mounted) return (
     <div className="flex items-center justify-center h-[600px] border bg-slate-50 animate-pulse">
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Loading Network Engine...</p>
@@ -79,7 +100,7 @@ export default function KnowledgeGraphPage() {
   );
 
   return (
-    <div className="space-y-8 h-full flex flex-col pb-10 animate-in fade-in duration-500">
+    <div className="space-y-8 h-full flex flex-col pb-10 animate-in fade-in duration-500 relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -101,7 +122,7 @@ export default function KnowledgeGraphPage() {
       </div>
 
       <div className="flex-1 min-h-[600px] grid lg:grid-cols-4 gap-8">
-        <div id="graph-container" className="lg:col-span-3 relative border bg-white shadow-sm group min-h-[600px] overflow-hidden">
+        <div id="graph-container" className="lg:col-span-3 relative border bg-white shadow-sm group min-h-[600px] overflow-hidden rounded-none">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -109,7 +130,7 @@ export default function KnowledgeGraphPage() {
             height={dimensions.height}
             backgroundColor="#F8F9FA"
             nodeLabel={(node: any) => `${node.type}: ${node.label}`}
-            nodeRelSize={8}
+            nodeRelSize={10}
             linkColor={(link: any) => link.statusColor}
             linkWidth={1.5}
             linkDirectionalArrowLength={5}
@@ -117,8 +138,6 @@ export default function KnowledgeGraphPage() {
             linkCanvasObjectMode={() => 'after'}
             linkCanvasObject={(link: any, ctx, globalScale) => {
               const MAX_FONT_SIZE = 4;
-              const LABEL_NODE_MARGIN = 6;
-
               const start = link.source;
               const end = link.target;
 
@@ -149,35 +168,27 @@ export default function KnowledgeGraphPage() {
               ctx.fillText(link.label, 0, 0);
               ctx.restore();
             }}
-            onNodeClick={(node) => setSelectedNode(node)}
+            onNodeClick={handleNodeClick}
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.label;
               const fontSize = 10 / globalScale;
-              const radius = 10;
+              const radius = 12;
               
-              // Draw circle
               ctx.beginPath();
               ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
               ctx.fillStyle = node.color;
               ctx.fill();
               
-              // Draw stroke
               ctx.lineWidth = 2 / globalScale;
               ctx.strokeStyle = node.strokeColor;
               ctx.stroke();
 
-              // Node Label inside/below
               ctx.font = `${fontSize}px Inter`;
-              const textWidth = ctx.measureText(label).width;
-              const textHeight = fontSize;
-              
-              // Center text inside circle if small, otherwise below
-              const words = label.split(' ');
-              ctx.fillStyle = '#333333';
+              ctx.fillStyle = node.type === 'INVOICE' || node.type === 'RETURN_PERIOD' ? '#1E293B' : '#FFFFFF';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               
-              // Intelligent label wrapping or truncation for circular nodes
+              const words = label.split(' ');
               if (words.length > 1) {
                 ctx.fillText(words[0], node.x, node.y - fontSize/2);
                 ctx.fillText(words[1], node.x, node.y + fontSize/2);
@@ -185,7 +196,6 @@ export default function KnowledgeGraphPage() {
                 ctx.fillText(label.length > 8 ? label.substring(0, 6) + '...' : label, node.x, node.y);
               }
 
-              // Risk Pulse
               if (node.riskLevel === 'CRITICAL') {
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, radius + 2 + Math.sin(Date.now() / 200) * 2, 0, 2 * Math.PI);
@@ -203,19 +213,19 @@ export default function KnowledgeGraphPage() {
 
           <div className="absolute bottom-6 left-6 flex flex-col gap-2 bg-white/95 p-4 border border-slate-100 shadow-sm backdrop-blur-sm">
              <div className="flex items-center gap-2">
-               <div className="h-3 w-3 rounded-full bg-[#FFB347]" />
+               <div className="h-3 w-3 rounded-full bg-[#003366]" />
                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Entities (Supplier/Root)</span>
              </div>
              <div className="flex items-center gap-2">
-               <div className="h-3 w-3 rounded-full bg-[#FFDAB9]" />
+               <div className="h-3 w-3 rounded-full bg-[#F1F5F9] border border-slate-300" />
                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Invoices</span>
              </div>
              <div className="flex items-center gap-2">
-               <div className="h-3 w-3 rounded-full bg-[#B39DDB]" />
+               <div className="h-3 w-3 rounded-full bg-[#CBD5E1]" />
                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Payments/Challans</span>
              </div>
              <div className="flex items-center gap-2">
-               <div className="h-3 w-3 rounded-full bg-[#F48FB1]" />
+               <div className="h-3 w-3 rounded-full bg-[#E2E8F0]" />
                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Returns/Filings</span>
              </div>
           </div>
@@ -260,19 +270,14 @@ export default function KnowledgeGraphPage() {
                      </div>
                   </div>
 
-                  {selectedNode.type === 'INVOICE' && (
-                    <div className="p-4 bg-slate-50 border border-slate-100 space-y-3">
-                       <p className="text-[9px] font-black uppercase text-slate-400">Transaction Evidence</p>
-                       <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500">Value</span>
-                          <span className="font-mono font-bold text-primary">₹{selectedNode.properties?.value?.toLocaleString()}</span>
-                       </div>
-                    </div>
+                  {(selectedNode.type === 'SUPPLIER' || selectedNode.type === 'BUYER') && (
+                    <Button 
+                      className="w-full h-10 rounded-none bg-primary text-white font-bold text-[10px] uppercase tracking-widest shadow-md"
+                      onClick={() => handleNodeClick(selectedNode)}
+                    >
+                      Open Intelligence Dossier <ChevronRight className="h-3 w-3 ml-2" />
+                    </Button>
                   )}
-
-                  <Button className="w-full h-10 rounded-none bg-primary text-white font-bold text-[10px] uppercase tracking-widest shadow-md">
-                    Open Intelligence Dossier <ChevronRight className="h-3 w-3 ml-2" />
-                  </Button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
@@ -298,6 +303,15 @@ export default function KnowledgeGraphPage() {
           </Card>
         </div>
       </div>
+
+      {/* Overlay Detail Panel */}
+      {isPanelOpen && selectedVendor && (
+        <CompanyTransactionPanel 
+          vendor={selectedVendor} 
+          invoices={vendorInvoices} 
+          onClose={() => setIsPanelOpen(false)} 
+        />
+      )}
     </div>
   );
 }
