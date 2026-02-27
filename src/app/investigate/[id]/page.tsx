@@ -1,4 +1,3 @@
-
 import { MOCK_INVOICES, MOCK_RISK_ASSESSMENTS, MOCK_VENDORS } from '@/app/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,9 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ShieldAlert, 
   ArrowLeft, 
-  ExternalLink, 
-  Info, 
-  Share2,
   FileText,
   User,
   Calendar,

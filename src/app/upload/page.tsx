@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -39,12 +38,13 @@ export default function UploadPage() {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
-        // Use functional updates to ensure consistency
+        
+        // Update local state and trigger side-effects outside of the render cycle
         setProgress(100);
         setIsProcessing(false);
         setCurrentStep(null);
         
-        // Trigger toast in a separate microtask to avoid "update while rendering" errors
+        // Trigger notification safely
         setTimeout(() => {
           toast({
             title: "Matching Engine Complete",
