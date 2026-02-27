@@ -14,12 +14,23 @@ export const MOCK_VENDORS: Vendor[] = [
 ];
 
 export const MOCK_INVOICES: Invoice[] = [
+  // Standard Supplier Transactions
   { id: 'INV-2024-001', invoiceNumber: 'PR-1029', vendorGstin: '29ABCDE1234F1Z5', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-15'), taxableAmount: 100000, cgst: 9000, sgst: 9000, igst: 0, totalAmount: 118000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 78, flags: ['IRN_CANCELLED', 'ITC_CHAIN_BROKEN'], irn: '5af67...b12', einvoiceStatus: 'Cancelled', paymentCoverageRatio: 0.4, itcClaimed: 18000 },
   { id: 'INV-2024-002', invoiceNumber: 'GL-8821', vendorGstin: '27FGHIJ5678K2L3', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-18'), taxableAmount: 50000, cgst: 0, sgst: 0, igst: 9000, totalAmount: 59000, source: 'GSTR_1', status: 'MATCHED', riskScore: 12, flags: [], irn: 'c12d3...e90', einvoiceStatus: 'Generated', paymentCoverageRatio: 1.0, itcClaimed: 9000 },
   { id: 'INV-2024-003', invoiceNumber: 'ZM-4491', vendorGstin: '19OPQRS3456T5U6', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-20'), taxableAmount: 200000, cgst: 18000, sgst: 18000, igst: 0, totalAmount: 236000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 95, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'f99a1...c01', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.1, itcClaimed: 36000 },
+  { id: 'INV-2024-004', invoiceNumber: 'NS-102', vendorGstin: '07KJHGF9876M1Z2', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-22'), taxableAmount: 30000, cgst: 2700, sgst: 2700, igst: 0, totalAmount: 35400, source: 'GSTR_1', status: 'PARTIAL_MATCH', riskScore: 45, flags: [], irn: 'n88x2...a1', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.8, itcClaimed: 5400 },
+  { id: 'INV-2024-005', invoiceNumber: 'VT-993', vendorGstin: '24PLMOK5544N6M7', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-25'), taxableAmount: 150000, cgst: 13500, sgst: 13500, igst: 0, totalAmount: 177000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 76, flags: ['ITC_CHAIN_BROKEN'], irn: 'v55k1...m3', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.5, itcClaimed: 27000 },
+
+  // Circular Trading Cluster (Length 3 Loop)
+  // Step 1: Alpha -> Beta (₹1,000,000)
   { id: 'INV-LOOP-001', invoiceNumber: 'LP-111', vendorGstin: '27LOOPA1111A1Z1', recipientGstin: '27LOOPB2222B2Z2', invoiceDate: new Date('2024-01-01'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP', 'SYMMETRY_DETECTED', 'TAX_GAP_90'], irn: 'lp111...x1', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
-  { id: 'INV-LOOP-002', invoiceNumber: 'LP-222', vendorGstin: '27LOOPB2222B2Z2', recipientGstin: '27LOOPC3333C3Z3', invoiceDate: new Date('2024-01-03'), taxableAmount: 1002000, cgst: 90180, sgst: 90180, igst: 0, totalAmount: 1182360, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP', 'SHORT_WINDOW_3D'], irn: 'lp222...y2', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.05, itcClaimed: 180360 },
+  // Step 2: Beta -> Gamma (₹1,002,000) - Symmetric Value Increase
+  { id: 'INV-LOOP-002', invoiceNumber: 'LP-222', vendorGstin: '27LOOPB2222B2Z2', recipientGstin: '27LOOPC3333C3Z3', invoiceDate: new Date('2024-01-03'), taxableAmount: 1001695, cgst: 90152, sgst: 90152, igst: 0, totalAmount: 1182000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP', 'SHORT_WINDOW_3D'], irn: 'lp222...y2', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.05, itcClaimed: 180304 },
+  // Step 3: Gamma -> Alpha (₹998,000) - Loop closure
   { id: 'INV-LOOP-003', invoiceNumber: 'LP-333', vendorGstin: '27LOOPC3333C3Z3', recipientGstin: '27LOOPA1111A1Z1', invoiceDate: new Date('2024-01-05'), taxableAmount: 998000, cgst: 89820, sgst: 89820, igst: 0, totalAmount: 1177640, source: 'GSTR_1', status: 'FLAGGED', riskScore: 95, flags: ['CIRCULAR_TRADING_LOOP', 'VALUE_RECIRCULATION'], irn: 'lp333...z3', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 179640 },
+  
+  // Risk Injection: Loop Entity -> My Company
+  { id: 'INV-LOOP-004', invoiceNumber: 'LP-TO-ROOT', vendorGstin: '27LOOPC3333C3Z3', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-10'), taxableAmount: 500000, cgst: 45000, sgst: 45000, igst: 0, totalAmount: 590000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 90, flags: ['INBOUND_CLUSTER_RISK'], irn: 'lp444...r4', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 90000 },
 ];
 
 export const MOCK_GRAPH_DATA = {
@@ -28,6 +39,8 @@ export const MOCK_GRAPH_DATA = {
     { id: '29ABCDE1234F1Z5', label: 'ABC Tech', type: 'SUPPLIER' as const, riskLevel: 'HIGH' },
     { id: '27FGHIJ5678K2L3', label: 'Global Logistics', type: 'SUPPLIER' as const, riskLevel: 'LOW' },
     { id: '19OPQRS3456T5U6', label: 'Zenith Marketing', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
+    { id: '07KJHGF9876M1Z2', label: 'Nexus Supply Chain', type: 'SUPPLIER' as const, riskLevel: 'MEDIUM' },
+    { id: '24PLMOK5544N6M7', label: 'Vibrant Textiles', type: 'SUPPLIER' as const, riskLevel: 'HIGH' },
     { id: '27LOOPA1111A1Z1', label: 'Shell Alpha', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
     { id: '27LOOPB2222B2Z2', label: 'Shell Beta', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
     { id: '27LOOPC3333C3Z3', label: 'Shell Gamma', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
@@ -39,12 +52,35 @@ export const MOCK_GRAPH_DATA = {
     }))
   ] as GraphNode[],
   links: [
+    // Standard Supplier Links to Root
+    { source: '29ABCDE1234F1Z5', target: 'INV-2024-001', type: 'ISSUED' as const, status: 'RISK' as const },
+    { source: 'INV-2024-001', target: MY_COMPANY_GSTIN, type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+    
+    { source: '27FGHIJ5678K2L3', target: 'INV-2024-002', type: 'ISSUED' as const, status: 'CLEAN' as const },
+    { source: 'INV-2024-002', target: MY_COMPANY_GSTIN, type: 'RECEIVED_BY' as const, status: 'CLEAN' as const },
+    
+    { source: '19OPQRS3456T5U6', target: 'INV-2024-003', type: 'ISSUED' as const, status: 'RISK' as const },
+    { source: 'INV-2024-003', target: MY_COMPANY_GSTIN, type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+
+    { source: '07KJHGF9876M1Z2', target: 'INV-2024-004', type: 'ISSUED' as const, status: 'WARNING' as const },
+    { source: 'INV-2024-004', target: MY_COMPANY_GSTIN, type: 'RECEIVED_BY' as const, status: 'WARNING' as const },
+
+    { source: '24PLMOK5544N6M7', target: 'INV-2024-005', type: 'ISSUED' as const, status: 'RISK' as const },
+    { source: 'INV-2024-005', target: MY_COMPANY_GSTIN, type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+
+    // Circular Trading Cluster (A -> B -> C -> A)
     { source: '27LOOPA1111A1Z1', target: 'INV-LOOP-001', type: 'ISSUED' as const, status: 'RISK' as const },
     { source: 'INV-LOOP-001', target: '27LOOPB2222B2Z2', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+    
     { source: '27LOOPB2222B2Z2', target: 'INV-LOOP-002', type: 'ISSUED' as const, status: 'RISK' as const },
     { source: 'INV-LOOP-002', target: '27LOOPC3333C3Z3', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+    
     { source: '27LOOPC3333C3Z3', target: 'INV-LOOP-003', type: 'ISSUED' as const, status: 'RISK' as const },
     { source: 'INV-LOOP-003', target: '27LOOPA1111A1Z1', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+
+    // Risk Injection into Root
+    { source: '27LOOPC3333C3Z3', target: 'INV-LOOP-004', type: 'ISSUED' as const, status: 'RISK' as const },
+    { source: 'INV-LOOP-004', target: MY_COMPANY_GSTIN, type: 'RECEIVED_BY' as const, status: 'RISK' as const },
   ] as GraphEdge[]
 };
 
