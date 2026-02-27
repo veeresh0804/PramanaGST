@@ -1,21 +1,18 @@
+'use server';
 
 import { HealthScore } from '@/domain/models/analytics';
 import { MOCK_INVOICES, MOCK_VENDORS } from '@/app/lib/mock-data';
 
 /**
- * Enhanced GST Health Scorer (Migration V2)
- * Formula: 
- * 30% Payment Consistency + 25% ITC Discipline + 20% Filing Consistency + 15% Network + 10% IRN Compliance
+ * Server-Side GST Health Scorer
+ * Implements deterministic scoring based on statutory compliance markers.
  */
 export async function calculateGSTHealthScore(): Promise<HealthScore> {
-  // Deriving metrics from new schema structure
   const totalInvoices = MOCK_INVOICES.length;
   const cancelledIRN = MOCK_INVOICES.filter(i => i.einvoiceStatus === 'Cancelled').length;
-  const underpaidInvoices = MOCK_INVOICES.filter(i => i.flags?.includes('UNDER_PAYMENT')).length;
   const highRiskVendors = MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH' || v.riskLevel === 'CRITICAL').length;
 
-  // Deriving Scores
-  const paymentScore = Math.max(0, 100 - (underpaidInvoices / totalInvoices) * 100);
+  const paymentScore = 85; // Baseline for simulated data
   const irnScore = Math.max(0, 100 - (cancelledIRN / totalInvoices) * 100);
   const networkScore = Math.max(0, 100 - (highRiskVendors / MOCK_VENDORS.length) * 100);
 
@@ -23,7 +20,7 @@ export async function calculateGSTHealthScore(): Promise<HealthScore> {
     (paymentScore * 0.30) + 
     (irnScore * 0.10) + 
     (networkScore * 0.15) + 
-    (85 * 0.45) // Default baseline for filing/itc in mock
+    (85 * 0.45)
   );
 
   return {

@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useParams } from 'next/navigation';
-import { MOCK_INVOICES, MOCK_VENDORS } from '@/app/lib/mock-data';
+import { MOCK_INVOICES } from '@/app/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Printer, 
   ArrowLeft, 
@@ -14,7 +14,10 @@ import {
   Network,
   Calendar,
   Fingerprint,
-  Stamp
+  Stamp,
+  CheckCircle2,
+  Lock,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useEffect, useState } from 'react';
@@ -23,11 +26,29 @@ import { cn } from '@/lib/utils';
 export default function AuditReportPage() {
   const params = useParams();
   const id = params.id as string;
+  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
+  const [isSigned, setIsSigned] = useState(false);
+  const [signTimestamp, setSignTimestamp] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleDigitalSignature = () => {
+    setIsSigning(true);
+    // Simulate Aadhaar e-Sign / HSM signing process
+    setTimeout(() => {
+      setIsSigning(false);
+      setIsSigned(true);
+      setSignTimestamp(new Date().toISOString());
+      toast({
+        title: "Digital Signature Applied",
+        description: "Report has been cryptographically signed by the Authorized Compliance Officer.",
+      });
+    }, 2000);
+  };
 
   const auditData = useMemo(() => {
     let title = "Statutory Evidence Log";
@@ -38,7 +59,6 @@ export default function AuditReportPage() {
       { code: 'ERR-702', title: 'Circular Loop', desc: 'Transaction path returns to Originating Entity without value addition.' }
     ];
 
-    // Specific logic for mock fraud clusters
     if (id === 'FRAUD-RING-72') {
       invoices = MOCK_INVOICES.filter(inv => inv.id.startsWith('INV-LOOP'));
       title = `Fraud Cluster Audit: Shell Network Alpha-Epsilon`;
@@ -56,13 +76,11 @@ export default function AuditReportPage() {
         { code: 'ERR-302', title: 'GSTR-2B Mismatch', desc: 'Recipient claiming ITC on invoices not present in the portal-generated 2B dataset.' }
       ];
     } else {
-      // Logic for single invoice audit
       const inv = MOCK_INVOICES.find(i => i.id === id);
       if (inv) {
         invoices = [inv];
         title = `Transaction Audit: ${inv.id}`;
         totalMismatch = inv.riskScore > 70 ? inv.totalAmount * 0.18 : 0;
-        
         if (inv.flags && inv.flags.length > 0) {
           issues = inv.flags.map((f, idx) => ({
             code: `ERR-V${100 + idx}`,
@@ -74,7 +92,6 @@ export default function AuditReportPage() {
         title = "Audit Not Found";
       }
     }
-
     return { title, invoices, totalMismatch, issues };
   }, [id]);
 
@@ -89,32 +106,48 @@ export default function AuditReportPage() {
               <ArrowLeft className="h-4 w-4" /> Back to Intelligence
             </Button>
           </Link>
-          <Button variant="default" size="sm" className="gap-2" onClick={() => window.print()}>
-            <Printer className="h-4 w-4" /> Print Report
-          </Button>
+          <div className="flex gap-2">
+            {!isSigned ? (
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="gap-2 bg-accent hover:bg-accent/90" 
+                onClick={handleDigitalSignature}
+                disabled={isSigning}
+              >
+                {isSigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                {isSigning ? "Verifying..." : "Verify with Digital Signature"}
+              </Button>
+            ) : (
+              <Badge className="bg-green-600 text-white gap-1.5 py-1.5 px-3 rounded-none">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Digitally Signed
+              </Badge>
+            )}
+            <Button variant="outline" size="sm" className="gap-2 bg-white" onClick={() => window.print()}>
+              <Printer className="h-4 w-4" /> Print Report
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Audit Document */}
       <Card className="max-w-4xl mx-auto mt-8 bg-white text-slate-900 shadow-2xl overflow-hidden print:shadow-none print:mt-0">
-        <div className="bg-slate-900 p-8 text-white flex justify-between items-center">
+        <div className="bg-primary p-8 text-white flex justify-between items-center">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">P</span>
+              <div className="h-8 w-8 rounded bg-white flex items-center justify-center">
+                <span className="text-primary font-bold">P</span>
               </div>
               <h1 className="text-2xl font-bold tracking-tight">Pramāṇa Audit Service</h1>
             </div>
-            <p className="text-slate-400 text-xs uppercase tracking-widest font-bold">Deterministic Graph Intelligence Output</p>
+            <p className="text-white/60 text-xs uppercase tracking-widest font-bold">Deterministic Graph Intelligence Output</p>
           </div>
           <div className="text-right space-y-1">
-            <p className="text-xs font-bold text-slate-400">REPORT NO.</p>
+            <p className="text-xs font-bold text-white/60">REPORT NO.</p>
             <p className="font-mono text-lg">{id?.toUpperCase() || 'AUD-000'}</p>
           </div>
         </div>
 
         <CardContent className="p-12 space-y-10 relative">
-          {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
              <ShieldCheck className="w-[500px] h-[500px]" />
           </div>
@@ -137,12 +170,16 @@ export default function AuditReportPage() {
               </div>
             </div>
             <div className="text-right flex flex-col items-end justify-center">
-               <div className="p-4 border-2 border-slate-900 rounded bg-slate-50">
+               <div className={cn(
+                 "p-4 border-2 rounded bg-slate-50",
+                 isSigned ? "border-green-600" : "border-slate-900"
+               )}>
                   <p className="text-[10px] font-bold text-slate-500 mb-1">CERTIFICATION STATUS</p>
-                  <div className="flex items-center gap-2 text-primary">
-                    <ShieldCheck className="h-5 w-5" />
-                    <span className="font-bold tracking-tight">VERIFIED EVIDENCE</span>
+                  <div className={cn("flex items-center gap-2", isSigned ? "text-green-600" : "text-primary")}>
+                    {isSigned ? <CheckCircle2 className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                    <span className="font-bold tracking-tight">{isSigned ? "CERTIFIED E-SIGN" : "VERIFIED EVIDENCE"}</span>
                   </div>
+                  {isSigned && <p className="text-[8px] font-mono mt-1 opacity-60">TS: {signTimestamp}</p>}
                </div>
             </div>
           </div>
@@ -150,12 +187,12 @@ export default function AuditReportPage() {
           <hr className="border-slate-200" />
 
           <section className="space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-primary">
               <FileText className="h-5 w-5 text-slate-500" />
               Executive Summary
             </h2>
             <p className="text-sm leading-relaxed text-slate-700">
-              The Pramāṇa Intelligence engine has completed a deterministic traversal of the Knowledge Graph for the subject: <span className="font-bold">{auditData.title}</span>. Based on the relationship topology and statutory filing cross-references, the system has identified specific risks associated with the entities listed below.
+              The Pramāṇa Intelligence engine has completed a deterministic traversal of the Knowledge Graph for the subject: <span className="font-bold">{auditData.title}</span>. Evidence traversal indicates specific risk propagation paths in the inbound supply chain.
             </p>
           </section>
 
@@ -164,7 +201,7 @@ export default function AuditReportPage() {
               <Network className="h-5 w-5 text-slate-500" />
               Graph Traversal Evidence
             </h2>
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border border-slate-200 rounded-none overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b">
                   <tr>
@@ -188,13 +225,6 @@ export default function AuditReportPage() {
                       </td>
                     </tr>
                   ))}
-                  {auditData.invoices.length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground italic">
-                        No graph evidence matches the current audit query.
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
                 {auditData.invoices.length > 0 && (
                   <tfoot className="bg-slate-50 font-bold border-t">
@@ -217,7 +247,7 @@ export default function AuditReportPage() {
             </h2>
             <div className="grid grid-cols-2 gap-4">
                {auditData.issues.map((issue, idx) => (
-                 <div key={idx} className="p-4 bg-destructive/5 border border-destructive/10 rounded">
+                 <div key={idx} className="p-4 bg-destructive/5 border border-destructive/10">
                     <p className="font-bold text-xs uppercase mb-1">Pramāṇa {issue.code}</p>
                     <p className="text-sm font-bold text-slate-800 mb-1">{issue.title}</p>
                     <p className="text-xs text-slate-600 italic">{issue.desc}</p>
@@ -228,8 +258,8 @@ export default function AuditReportPage() {
 
           <div className="pt-20 flex justify-between items-end border-t border-slate-100">
              <div className="space-y-2 opacity-50">
-               <Stamp className="h-16 w-16" />
-               <p className="text-[8px] font-mono">DIGITAL AUTHENTICATION CODE: 0X991A...B22C</p>
+               {isSigned ? <CheckCircle2 className="h-16 w-16 text-green-600" /> : <Stamp className="h-16 w-16" />}
+               <p className="text-[8px] font-mono">DIGITAL AUTHENTICATION CODE: {isSigned ? "SIGNED_SECURE_0X99" : "PENDING_AUTH_STAMP"}</p>
              </div>
              <div className="text-center space-y-1">
                <div className="w-48 border-b-2 border-slate-900 mx-auto mb-2"></div>
@@ -240,7 +270,7 @@ export default function AuditReportPage() {
         </CardContent>
 
         <div className="bg-slate-50 p-6 text-center text-[10px] text-slate-400 font-bold border-t italic">
-          Disclaimer: This is a deterministic evidence log generated from graph analytics. It is intended for statutory compliance review.
+          Disclaimer: This is a deterministic evidence log generated from graph analytics.
         </div>
       </Card>
 
