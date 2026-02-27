@@ -4,14 +4,18 @@ import {
   ShieldAlert, 
   CheckCircle2, 
   Clock, 
-  TrendingUp 
+  TrendingUp,
+  Database,
+  ArrowRight
 } from 'lucide-react';
-import { MOCK_VENDORS } from './lib/mock-data';
+import { MOCK_VENDORS, MOCK_INVOICES } from './lib/mock-data';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const highRiskVendors = MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH' || v.riskLevel === 'CRITICAL');
+  const flaggedInvoices = MOCK_INVOICES.filter(i => i.status === 'FLAGGED');
   
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -53,9 +57,9 @@ export default function DashboardPage() {
             <ShieldAlert className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">48</div>
+            <div className="text-2xl font-bold">{flaggedInvoices.length}</div>
             <p className="text-xs text-destructive flex items-center gap-1 pt-1">
-              <ArrowUpRight className="h-3 w-3" /> 5 new high-risk alerts
+              <ArrowUpRight className="h-3 w-3" /> Action required
             </p>
           </CardContent>
         </Card>
@@ -76,27 +80,38 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4 bg-card/50 border">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-headline">Recent Investigations</CardTitle>
+            <Link href="/investigate">
+              <Button variant="ghost" size="sm" className="text-xs gap-1">
+                View All <ArrowRight className="h-3 w-3" />
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium">INV-2024-00{i}</span>
-                    <span className="text-xs text-muted-foreground">ABC Technologies Pvt Ltd</span>
+              {MOCK_INVOICES.map((invoice) => {
+                const vendor = MOCK_VENDORS.find(v => v.gstin === invoice.vendorGstin);
+                return (
+                  <div key={invoice.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium">{invoice.id}</span>
+                      <span className="text-xs text-muted-foreground">{vendor?.name || 'Unknown Vendor'}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "text-xs px-2 py-0.5 rounded-full border font-medium",
+                        invoice.status === 'FLAGGED' ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-secondary/10 text-secondary border-secondary/20"
+                      )}>
+                        {invoice.status}
+                      </span>
+                      <Link href={`/investigate/${invoice.id}`} className="text-xs text-primary hover:underline font-medium">
+                        Investigate
+                      </Link>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 font-medium">
-                      High Risk
-                    </span>
-                    <Link href={`/investigate/INV-2024-00${i}`} className="text-xs text-primary hover:underline font-medium">
-                      Investigate
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -129,26 +144,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  );
-}
-
-function Database(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5V19A9 3 0 0 0 21 19V5" />
-      <path d="M3 12A9 3 0 0 0 21 12" />
-    </svg>
   );
 }

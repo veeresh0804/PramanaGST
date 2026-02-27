@@ -1,9 +1,36 @@
+'use client';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, FileText, CheckCircle, Info, AlertTriangle } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle, Info, Database, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UploadPage() {
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(75);
+
+  const handleExecuteMatch = () => {
+    setIsProcessing(true);
+    // Simulate reconciliation process
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsProcessing(false);
+          toast({
+            title: "Reconciliation Complete",
+            description: "Successfully matched 452/456 records. 4 flags raised.",
+          });
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 200);
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-top-2 duration-500">
       <div className="flex flex-col gap-1">
@@ -48,9 +75,9 @@ export default function UploadPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   <span>Processing PR_JAN_2024.csv</span>
-                  <span>75%</span>
+                  <span>{progress}%</span>
                 </div>
-                <Progress value={75} className="h-1.5 bg-muted" />
+                <Progress value={progress} className="h-1.5 bg-muted" />
               </div>
               
               <div className="flex items-center gap-3 p-3 rounded-md bg-muted/20 border border-white/5">
@@ -61,7 +88,16 @@ export default function UploadPage() {
                   <p className="text-sm font-medium">GSTR_2B_JAN.xlsx</p>
                   <p className="text-[10px] text-muted-foreground">Ready for reconciliation</p>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs text-primary h-7">Execute Match</Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs text-primary h-7"
+                  onClick={handleExecuteMatch}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                  {isProcessing ? "Matching..." : "Execute Match"}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -78,26 +114,5 @@ export default function UploadPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Database(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5V19A9 3 0 0 0 21 19V5" />
-      <path d="M3 12A9 3 0 0 0 21 12" />
-    </svg>
   );
 }
