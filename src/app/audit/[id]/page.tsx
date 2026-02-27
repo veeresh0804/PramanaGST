@@ -30,22 +30,32 @@ export default function AuditReportPage() {
   }, []);
 
   const auditData = useMemo(() => {
-    const isCluster = id?.startsWith('FRAUD-RING');
     let title = "Statutory Evidence Log";
     let invoices = [];
     let totalMismatch = 0;
 
-    if (isCluster) {
-      invoices = MOCK_INVOICES.filter(inv => inv.flags?.includes('CIRCULAR_TRADING_LOOP'));
-      title = `Fraud Cluster Audit: ${id}`;
-      totalMismatch = invoices.length * 18000; // Simulated logic
+    // Specific logic for mock fraud clusters
+    if (id === 'FRAUD-RING-72') {
+      invoices = MOCK_INVOICES.filter(inv => inv.id.startsWith('INV-LOOP'));
+      title = `Fraud Cluster Audit: Shell Network Alpha-Epsilon`;
+      totalMismatch = 180000;
+    } else if (id === 'FRAUD-RING-91') {
+      invoices = MOCK_INVOICES.filter(inv => inv.id === 'INV-2024-003');
+      title = `Fraud Cluster Audit: Zenith Cluster Analysis`;
+      totalMismatch = 36000;
     } else {
+      // Logic for single invoice audit
       const inv = MOCK_INVOICES.find(i => i.id === id);
-      if (inv) invoices = [inv];
-      title = `Transaction Audit: ${id}`;
+      if (inv) {
+        invoices = [inv];
+        title = `Transaction Audit: ${inv.id}`;
+        totalMismatch = inv.riskScore > 70 ? inv.totalAmount * 0.18 : 0;
+      } else {
+        title = "Audit Not Found";
+      }
     }
 
-    return { title, invoices, totalMismatch, isCluster };
+    return { title, invoices, totalMismatch };
   }, [id]);
 
   if (!mounted) return null;
@@ -125,7 +135,7 @@ export default function AuditReportPage() {
               Executive Summary
             </h2>
             <p className="text-sm leading-relaxed text-slate-700">
-              The Pramāṇa Intelligence engine has completed a deterministic traversal of the Knowledge Graph for the subject identified as <span className="font-bold">{id}</span>. Based on the relationship topology and statutory filing cross-references, the system has identified a high-probability risk cluster involving multiple shell entities and circular trading patterns.
+              The Pramāṇa Intelligence engine has completed a deterministic traversal of the Knowledge Graph for the subject: <span className="font-bold">{auditData.title}</span>. Based on the relationship topology and statutory filing cross-references, the system has identified specific risks associated with the entities listed below.
             </p>
           </section>
 
@@ -158,15 +168,24 @@ export default function AuditReportPage() {
                       </td>
                     </tr>
                   ))}
+                  {auditData.invoices.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground italic">
+                        No graph evidence matches the current audit query.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
-                <tfoot className="bg-slate-50 font-bold border-t">
-                  <tr>
-                    <td colSpan={2} className="px-4 py-3 text-right text-destructive">ESTIMATED TAX EVASION / MISMATCH</td>
-                    <td className="px-4 py-3 text-right text-destructive font-mono">
-                      ₹{auditData.totalMismatch.toLocaleString()}
-                    </td>
-                  </tr>
-                </tfoot>
+                {auditData.invoices.length > 0 && (
+                  <tfoot className="bg-slate-50 font-bold border-t">
+                    <tr>
+                      <td colSpan={2} className="px-4 py-3 text-right text-destructive">ESTIMATED TAX EVASION / MISMATCH</td>
+                      <td className="px-4 py-3 text-right text-destructive font-mono">
+                        ₹{auditData.totalMismatch.toLocaleString()}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </section>
@@ -179,11 +198,11 @@ export default function AuditReportPage() {
             <div className="grid grid-cols-2 gap-4">
                <div className="p-4 bg-destructive/5 border border-destructive/10 rounded">
                   <p className="font-bold text-xs uppercase mb-1">Pramāṇa Error 401</p>
-                  <p className="text-xs text-slate-600 italic">Chain Break: Upstream vendor payment node missing in GSTR-3B filings for JAN-2024.</p>
+                  <p className="text-xs text-slate-600 italic">Chain Break: Upstream vendor payment node missing in GSTR-3B filings.</p>
                </div>
                <div className="p-4 bg-destructive/5 border border-destructive/10 rounded">
                   <p className="font-bold text-xs uppercase mb-1">Pramāṇa Error 702</p>
-                  <p className="text-xs text-slate-600 italic">Circular Loop: Transaction path returns to Originating Entity within 15 days without value addition.</p>
+                  <p className="text-xs text-slate-600 italic">Circular Loop: Transaction path returns to Originating Entity without value addition.</p>
                </div>
             </div>
           </section>
