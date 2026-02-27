@@ -16,8 +16,9 @@ import {
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
 
-export default async function InvestigationPage({ params }: { params: { id: string } }) {
-  const invoice = MOCK_INVOICES.find(i => i.id === params.id) || MOCK_INVOICES[0];
+export default async function InvestigationPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const invoice = MOCK_INVOICES.find(i => i.id === id) || MOCK_INVOICES[0];
   const assessment = MOCK_RISK_ASSESSMENTS[0];
   
   const aiExplanation = await explainInvoiceFlag({
@@ -31,10 +32,10 @@ export default async function InvestigationPage({ params }: { params: { id: stri
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/">
-            <button className="p-2 hover:bg-muted rounded-full transition-colors">
+          <Link href="/investigate">
+            <div className="p-2 hover:bg-muted rounded-full transition-colors cursor-pointer">
               <ArrowLeft className="h-5 w-5" />
-            </button>
+            </div>
           </Link>
           <div className="flex flex-col">
             <h1 className="font-headline text-3xl font-bold tracking-tight">
@@ -105,7 +106,6 @@ export default async function InvestigationPage({ params }: { params: { id: stri
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center justify-center h-[350px]">
-              {/* Mock Force-Directed Graph UI */}
               <div className="relative w-full h-full p-8 flex items-center justify-center">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center shadow-[0_0_30px_rgba(90,194,255,0.3)] animate-pulse">
                   <span className="text-[10px] font-bold">INV-2024</span>
