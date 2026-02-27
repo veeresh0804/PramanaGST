@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,24 +29,40 @@ import {
   LineChart,
   Line
 } from 'recharts';
-
-const RISK_DISTRIBUTION_DATA = [
-  { name: 'Low', value: 45, color: '#4DE0E6' },
-  { name: 'Medium', value: 25, color: '#5AC2FF' },
-  { name: 'High', value: 20, color: '#f59e0b' },
-  { name: 'Critical', value: 10, color: '#ef4444' },
-];
-
-const TREND_DATA = [
-  { month: 'Oct', matches: 88, anomalies: 12 },
-  { month: 'Nov', matches: 91, anomalies: 8 },
-  { month: 'Dec', matches: 85, anomalies: 15 },
-  { month: 'Jan', matches: 94, anomalies: 6 },
-];
+import { useMemo } from 'react';
 
 export default function DashboardPage() {
-  const highRiskVendors = MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH' || v.riskLevel === 'CRITICAL');
-  
+  const highRiskVendors = useMemo(() => 
+    MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH' || v.riskLevel === 'CRITICAL')
+  , []);
+
+  const stats = useMemo(() => {
+    const totalVolume = MOCK_INVOICES.reduce((acc, inv) => acc + inv.totalAmount, 0);
+    const riskAnomalies = MOCK_INVOICES.filter(inv => inv.status === 'FLAGGED').length;
+    const matchedCount = MOCK_INVOICES.filter(inv => inv.status === 'MATCHED').length;
+    const reconHealth = (matchedCount / MOCK_INVOICES.length) * 100;
+
+    return { totalVolume, riskAnomalies, reconHealth };
+  }, []);
+
+  const riskDistribution = useMemo(() => {
+    const counts = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
+    MOCK_VENDORS.forEach(v => counts[v.riskLevel]++);
+    return [
+      { name: 'Low', value: counts.LOW, color: '#4DE0E6' },
+      { name: 'Medium', value: counts.MEDIUM, color: '#5AC2FF' },
+      { name: 'High', value: counts.HIGH, color: '#f59e0b' },
+      { name: 'Critical', value: counts.CRITICAL, color: '#ef4444' },
+    ];
+  }, []);
+
+  const trendData = [
+    { month: 'Oct', matches: 88, anomalies: 12 },
+    { month: 'Nov', matches: 91, anomalies: 8 },
+    { month: 'Dec', matches: 85, anomalies: 15 },
+    { month: 'Jan', matches: Math.round(stats.reconHealth), anomalies: stats.riskAnomalies },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
@@ -62,9 +77,9 @@ export default function DashboardPage() {
             <Database className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹1.42 Cr</div>
+            <div className="text-2xl font-bold">₹{(stats.totalVolume / 10000000).toFixed(2)} Cr</div>
             <p className="text-xs text-primary flex items-center gap-1 pt-1">
-              <TrendingUp className="h-3 w-3" /> +12% from last month
+              <TrendingUp className="h-3 w-3" /> Based on {MOCK_INVOICES.length} invoices
             </p>
           </CardContent>
         </Card>
@@ -75,9 +90,9 @@ export default function DashboardPage() {
             <CheckCircle2 className="h-4 w-4 text-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">94.2%</div>
+            <div className="text-2xl font-bold">{stats.reconHealth.toFixed(1)}%</div>
             <div className="w-full bg-muted h-1 mt-2 rounded-full overflow-hidden">
-              <div className="bg-secondary h-full" style={{ width: '94.2%' }} />
+              <div className="bg-secondary h-full" style={{ width: `${stats.reconHealth}%` }} />
             </div>
           </CardContent>
         </Card>
@@ -88,22 +103,22 @@ export default function DashboardPage() {
             <ShieldAlert className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{stats.riskAnomalies}</div>
             <p className="text-xs text-destructive flex items-center gap-1 pt-1">
-              <AlertTriangle className="h-3 w-3" /> Immediate review
+              <AlertTriangle className="h-3 w-3" /> Immediate review needed
             </p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-amber-500 bg-card/50 backdrop-blur shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Pending Audit</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Vendors</CardTitle>
             <Clock className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
+            <div className="text-2xl font-bold">{MOCK_VENDORS.length}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1 pt-1">
-              Awaiting manual proof
+              Registered entities
             </p>
           </CardContent>
         </Card>
@@ -120,7 +135,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={TREND_DATA}>
+              <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
                 <XAxis dataKey="month" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
@@ -144,13 +159,13 @@ export default function DashboardPage() {
              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={RISK_DISTRIBUTION_DATA}
+                    data={riskDistribution}
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {RISK_DISTRIBUTION_DATA.map((entry, index) => (
+                    {riskDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -160,7 +175,7 @@ export default function DashboardPage() {
                 </PieChart>
              </ResponsiveContainer>
              <div className="flex flex-col gap-2 pr-4">
-                {RISK_DISTRIBUTION_DATA.map((entry) => (
+                {riskDistribution.map((entry) => (
                   <div key={entry.name} className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                     <span className="text-xs text-muted-foreground">{entry.name}</span>
@@ -174,7 +189,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4 bg-card/50 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-headline">High-Risk Cases</CardTitle>
+            <CardTitle className="font-headline">Flagged Transactions</CardTitle>
             <Link href="/investigate">
               <Button variant="ghost" size="sm" className="text-xs gap-1">
                 Investigation Hub <ArrowRight className="h-3 w-3" />
@@ -183,7 +198,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {MOCK_INVOICES.filter(i => i.status !== 'MATCHED').map((invoice) => {
+              {MOCK_INVOICES.filter(i => i.status !== 'MATCHED').slice(0, 5).map((invoice) => {
                 const vendor = MOCK_VENDORS.find(v => v.gstin === invoice.vendorGstin);
                 return (
                   <div key={invoice.id} className="flex items-center justify-between border-b border-border/50 pb-4 last:border-0 last:pb-0">
@@ -218,7 +233,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {highRiskVendors.map((vendor) => (
+              {highRiskVendors.slice(0, 6).map((vendor) => (
                 <div key={vendor.gstin} className="flex items-center justify-between">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-medium">{vendor.name}</span>
