@@ -10,7 +10,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MOCK_VENDORS } from '../lib/mock-data';
+import { MOCK_VENDORS, MOCK_INVOICES } from '../lib/mock-data';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ShieldAlert, Info, Search, Filter, ArrowUpDown } from 'lucide-react';
@@ -22,10 +22,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CompanyTransactionPanel } from '../graph/company-transaction-panel';
+import { Vendor, Invoice } from '@/domain/models/entities';
 
 export default function VendorsPage() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<'name' | 'riskScore'>('riskScore');
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const filteredVendors = useMemo(() => {
     return MOCK_VENDORS
@@ -38,6 +42,16 @@ export default function VendorsPage() {
         return a.name.localeCompare(b.name);
       });
   }, [search, sortField]);
+
+  const vendorInvoices = useMemo(() => {
+    if (!selectedVendor) return [];
+    return MOCK_INVOICES.filter(inv => inv.vendorGstin === selectedVendor.gstin || inv.recipientGstin === selectedVendor.gstin);
+  }, [selectedVendor]);
+
+  const handleViewDetails = (vendor: Vendor) => {
+    setSelectedVendor(vendor);
+    setIsPanelOpen(true);
+  };
 
   return (
     <div className="space-y-10 animate-in slide-in-from-bottom-2 duration-500 pb-10">
@@ -148,7 +162,12 @@ export default function VendorsPage() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase rounded-none border-primary/20 hover:bg-primary hover:text-white transition-all">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-[10px] font-bold uppercase rounded-none border-primary/20 hover:bg-primary hover:text-white transition-all"
+                            onClick={() => handleViewDetails(vendor)}
+                          >
                             View Details
                           </Button>
                         </TooltipTrigger>
@@ -184,6 +203,14 @@ export default function VendorsPage() {
             </p>
          </div>
       </div>
+
+      {isPanelOpen && selectedVendor && (
+        <CompanyTransactionPanel 
+          vendor={selectedVendor} 
+          invoices={vendorInvoices} 
+          onClose={() => setIsPanelOpen(false)} 
+        />
+      )}
     </div>
   );
 }
