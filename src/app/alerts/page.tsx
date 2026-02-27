@@ -2,15 +2,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertSeverity } from '@/domain/models/analytics';
 import { Bell, ShieldAlert, Info, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function AlertCenterPage() {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<(Alert & { link?: string })[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,8 @@ export default function AlertCenterPage() {
         timestamp: new Date(),
         severity: 'CRITICAL',
         source: 'RISK_AI',
-        isRead: false
+        isRead: false,
+        link: '/audit/FRAUD-RING-91'
       },
       {
         id: 'ALR-002',
@@ -32,7 +34,8 @@ export default function AlertCenterPage() {
         timestamp: new Date(Date.now() - 3600000),
         severity: 'WARNING',
         source: 'FRAUD_ENGINE',
-        isRead: false
+        isRead: false,
+        link: '/audit/FRAUD-RING-72'
       },
       {
         id: 'ALR-003',
@@ -41,7 +44,8 @@ export default function AlertCenterPage() {
         timestamp: new Date(Date.now() - 7200000),
         severity: 'INFO',
         source: 'RECON',
-        isRead: true
+        isRead: true,
+        link: '/analytics'
       }
     ]);
   }, []);
@@ -106,7 +110,11 @@ export default function AlertCenterPage() {
                    )}>
                      {alert.severity}
                    </Badge>
-                   <Button variant="ghost" size="sm" className="text-xs h-7">Investigate Case</Button>
+                   {alert.link && (
+                     <Link href={alert.link}>
+                       <Button variant="ghost" size="sm" className="text-xs h-7">Investigate Case</Button>
+                     </Link>
+                   )}
                 </div>
               </div>
             </CardContent>
