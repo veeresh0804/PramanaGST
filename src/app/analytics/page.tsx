@@ -20,20 +20,20 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
+  ResponsiveContainer
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 
 export default function AnalyticsPage() {
   const [healthData, setHealthData] = useState<HealthScore | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     calculateGSTHealthScore().then(setHealthData);
   }, []);
 
+  if (!mounted) return null;
   if (!healthData) return <div className="p-8 text-center animate-pulse">Calculating Intelligence Metrics...</div>;
 
   return (

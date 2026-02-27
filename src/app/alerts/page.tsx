@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertSeverity } from '@/domain/models/analytics';
 import { Bell, ShieldAlert, Info, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
@@ -9,38 +9,42 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-const MOCK_ALERTS: Alert[] = [
-  {
-    id: 'ALR-001',
-    title: 'Critical ITC Chain Break',
-    description: 'Suspicious mismatch detected in upstream tax payment for Vendor ZEN-91.',
-    timestamp: new Date(),
-    severity: 'CRITICAL',
-    source: 'RISK_AI',
-    isRead: false
-  },
-  {
-    id: 'ALR-002',
-    title: 'High Network Risk Cluster',
-    description: 'Fraud ring engine identified a high-degree community formation in Sector 4.',
-    timestamp: new Date(Date.now() - 3600000),
-    severity: 'WARNING',
-    source: 'FRAUD_ENGINE',
-    isRead: false
-  },
-  {
-    id: 'ALR-003',
-    title: 'Batch Matching Complete',
-    description: 'PR_JAN_2024 has been successfully reconciled against GSTR-2B.',
-    timestamp: new Date(Date.now() - 7200000),
-    severity: 'INFO',
-    source: 'RECON',
-    isRead: true
-  }
-];
-
 export default function AlertCenterPage() {
-  const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setAlerts([
+      {
+        id: 'ALR-001',
+        title: 'Critical ITC Chain Break',
+        description: 'Suspicious mismatch detected in upstream tax payment for Vendor ZEN-91.',
+        timestamp: new Date(),
+        severity: 'CRITICAL',
+        source: 'RISK_AI',
+        isRead: false
+      },
+      {
+        id: 'ALR-002',
+        title: 'High Network Risk Cluster',
+        description: 'Fraud ring engine identified a high-degree community formation in Sector 4.',
+        timestamp: new Date(Date.now() - 3600000),
+        severity: 'WARNING',
+        source: 'FRAUD_ENGINE',
+        isRead: false
+      },
+      {
+        id: 'ALR-003',
+        title: 'Batch Matching Complete',
+        description: 'PR_JAN_2024 has been successfully reconciled against GSTR-2B.',
+        timestamp: new Date(Date.now() - 7200000),
+        severity: 'INFO',
+        source: 'RECON',
+        isRead: true
+      }
+    ]);
+  }, []);
 
   const getIcon = (severity: AlertSeverity) => {
     switch (severity) {
@@ -49,6 +53,8 @@ export default function AlertCenterPage() {
       default: return <Info className="h-4 w-4 text-primary" />;
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">

@@ -1,3 +1,4 @@
+
 import { MOCK_INVOICES, MOCK_RISK_ASSESSMENTS, MOCK_VENDORS } from '@/app/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +20,11 @@ import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-export default async function InvestigationPage({ params }: { params: Promise<{ id: string }> }) {
+interface InvestigationPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function InvestigationPage({ params }: InvestigationPageProps) {
   const { id } = await params;
   const invoice = MOCK_INVOICES.find(i => i.id === id) || MOCK_INVOICES[0];
   const assessment = MOCK_RISK_ASSESSMENTS.find(a => a.vendorGstin === invoice.vendorGstin) || MOCK_RISK_ASSESSMENTS[0];

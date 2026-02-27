@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -23,7 +24,21 @@ export default function UploadPage() {
     "Syncing results to graph database..."
   ];
 
+  // Logic to handle completion outside of the interval loop to avoid setState in render
+  useEffect(() => {
+    if (progress === 100 && isProcessing) {
+      setIsProcessing(false);
+      setCurrentStep(null);
+      toast({
+        title: "Matching Engine Complete",
+        description: "Successfully processed 1,240 records. 12 risk flags raised.",
+      });
+    }
+  }, [progress, isProcessing, toast]);
+
   const handleExecuteMatch = useCallback(() => {
+    if (isProcessing) return;
+
     setIsProcessing(true);
     setProgress(0);
     
@@ -31,33 +46,23 @@ export default function UploadPage() {
     const totalSteps = steps.length;
     
     intervalRef.current = setInterval(() => {
-      localProgress += 4;
+      localProgress += 2;
       
       if (localProgress >= 100) {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
-        
-        // Side effects are triggered here safely
-        setIsProcessing(false);
         setProgress(100);
-        setCurrentStep(null);
-        
-        toast({
-          title: "Matching Engine Complete",
-          description: "Successfully processed 1,240 records. 12 risk flags raised.",
-        });
       } else {
-        // Update state without side-effects in the render phase
         const stepIdx = Math.floor((localProgress / 100) * totalSteps);
         const nextStep = steps[Math.min(stepIdx, totalSteps - 1)];
         
         setProgress(localProgress);
         setCurrentStep(nextStep);
       }
-    }, 150);
-  }, [toast, steps]);
+    }, 100);
+  }, [isProcessing, steps]);
 
   useEffect(() => {
     return () => {
