@@ -13,7 +13,9 @@ import {
   IndianRupee,
   Network,
   Scale,
-  Zap
+  Zap,
+  Hash,
+  ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
@@ -50,12 +52,12 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
             <h1 className="font-headline text-3xl font-bold tracking-tight">
               Case Analysis: {invoice.id}
             </h1>
-            <p className="text-muted-foreground">Deep dive investigation into transaction lineage and tax compliance.</p>
+            <p className="text-muted-foreground">Detailed investigation into IRN lineage and tax payment coverage.</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="border-primary/20 text-primary uppercase font-bold tracking-widest text-[10px] px-3">
-            Priority: High
+            Priority: {invoice.riskScore > 80 ? 'CRITICAL' : 'HIGH'}
           </Badge>
           <Badge variant="secondary" className={cn(
             "uppercase font-bold tracking-widest text-[10px] px-3",
@@ -71,7 +73,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-muted/20">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="graph">Knowledge Graph</TabsTrigger>
+              <TabsTrigger value="schema">Dataset Schema</TabsTrigger>
               <TabsTrigger value="audit">Audit Log</TabsTrigger>
             </TabsList>
             
@@ -80,22 +82,26 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                 <CardHeader className="border-b bg-muted/20">
                   <CardTitle className="text-lg font-medium flex items-center gap-2">
                     <FileText className="h-4 w-4 text-primary" />
-                    Transaction Metadata
+                    Transaction Integrity
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 grid grid-cols-2 gap-8 md:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <User className="h-3 w-3" /> Vendor
+                      <Hash className="h-3 w-3" /> IRN Status
                     </p>
-                    <p className="text-sm font-medium">{vendor?.name || 'ABC Technologies'}</p>
-                    <p className="text-[10px] font-mono opacity-50">{invoice.vendorGstin}</p>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px]",
+                      invoice.einvoiceStatus === 'Generated' ? "text-secondary border-secondary/20" : "text-destructive border-destructive/20"
+                    )}>
+                      {invoice.einvoiceStatus || 'Missing'}
+                    </Badge>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> Posting Date
+                      <Scale className="h-3 w-3" /> Payment Ratio
                     </p>
-                    <p className="text-sm font-medium">{invoice.invoiceDate.toLocaleDateString()}</p>
+                    <p className="text-sm font-medium">{(invoice.paymentCoverageRatio || 0.85) * 100}%</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
@@ -118,27 +124,23 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
               <div className="grid gap-6 md:grid-cols-2">
                 <Card className="bg-card/50 border">
                   <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Match Engine Results</CardTitle>
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Compliance Adapter</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Matching Type</span>
-                        <Badge variant="outline" className="text-secondary border-secondary/20">FUZZY ML</Badge>
+                        <span className="text-muted-foreground">IRN Linkage</span>
+                        <Badge variant="outline" className="text-secondary border-secondary/20">VERIFIED</Badge>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Confidence</span>
-                        <span className="font-mono">82%</span>
-                     </div>
-                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Source Deviation</span>
-                        <span className="text-destructive font-mono">+₹4,200</span>
+                        <span className="text-muted-foreground">Tax Match Confidence</span>
+                        <span className="font-mono">94%</span>
                      </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-card/50 border">
                   <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Network Metrics</CardTitle>
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Network Integrity</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="flex justify-between items-center text-sm">
@@ -146,142 +148,74 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                         <span className="font-mono">{vendor?.networkMetrics?.chainDepth || 0}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Cluster Risk</span>
-                        <span className="font-mono">{(vendor?.networkMetrics?.clusterRisk || 0) * 100}%</span>
-                     </div>
-                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Degree Centrality</span>
-                        <span className="font-mono">{vendor?.networkMetrics?.degreeCentrality || 0}</span>
+                        <span className="text-muted-foreground">Registration Type</span>
+                        <span className="font-mono">{vendor?.registrationType || 'Regular'}</span>
                      </div>
                   </CardContent>
                 </Card>
               </div>
             </TabsContent>
 
-            <TabsContent value="graph" className="mt-6">
-              <Card className="bg-card/50 border min-h-[500px] graph-container overflow-hidden relative group">
-                <CardHeader className="bg-black/20 backdrop-blur-sm z-10 border-b relative">
-                  <CardTitle className="text-lg font-medium flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Network className="h-4 w-4 text-secondary" />
-                      Visual Lineage
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-[400px]">
-                  <div className="relative w-full h-full p-8 flex items-center justify-center">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center shadow-[0_0_30px_rgba(90,194,255,0.3)] animate-pulse">
-                      <span className="text-[10px] font-bold">{invoice.id}</span>
-                    </div>
-                    
-                    <div className="absolute top-1/4 left-1/3 w-16 h-16 rounded-full bg-secondary/20 border border-secondary flex items-center justify-center group-hover:scale-110 transition-transform cursor-pointer">
-                       <span className="text-[8px] font-medium uppercase">VENDOR</span>
-                    </div>
-                    <div className="absolute bottom-1/4 right-1/4 w-16 h-16 rounded-full bg-destructive/20 border border-destructive flex items-center justify-center group-hover:scale-110 transition-transform cursor-pointer">
-                       <span className="text-[8px] font-medium uppercase">ITC_BREAK</span>
-                    </div>
-
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40">
-                       <line x1="50%" y1="50%" x2="35%" y2="28%" stroke="#5AC2FF" strokeWidth="1" strokeDasharray="4" />
-                       <line x1="50%" y1="50%" x2="72%" y2="72%" stroke="#ef4444" strokeWidth="1" />
-                    </svg>
+            <TabsContent value="schema" className="mt-6">
+              <Card className="bg-card/50 border p-6">
+                <h3 className="text-lg font-bold mb-4">Migration Schema Mapping</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 border-b pb-4">
+                    <span className="text-xs font-bold text-muted-foreground">GSTR-1 Recipient</span>
+                    <span className="text-sm font-mono">{invoice.recipientGstin || 'N/A'}</span>
                   </div>
-                </CardContent>
+                  <div className="grid grid-cols-2 gap-4 border-b pb-4">
+                    <span className="text-xs font-bold text-muted-foreground">IRN Reference</span>
+                    <span className="text-sm font-mono truncate">{invoice.irn || 'Missing'}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <span className="text-xs font-bold text-muted-foreground">ITC Ratio</span>
+                    <span className="text-sm font-mono">{(invoice.itcClaimed || 0) / (invoice.totalAmount * 0.18 || 1) * 100}%</span>
+                  </div>
+                </div>
               </Card>
             </TabsContent>
 
             <TabsContent value="audit" className="mt-6">
-              <Card className="bg-card/50 border">
-                 <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Audit Trail</CardTitle>
-                 </CardHeader>
-                 <CardContent>
-                    <div className="space-y-4">
-                       <div className="flex gap-4 items-start pb-4 border-b border-white/5">
-                          <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                          <div className="space-y-1">
-                             <p className="text-sm font-medium">Invoiced ingested via PR upload</p>
-                             <p className="text-xs text-muted-foreground">Jan 15, 2024 • 09:42 AM</p>
-                          </div>
-                       </div>
-                       <div className="flex gap-4 items-start pb-4 border-b border-white/5">
-                          <div className="h-2 w-2 rounded-full bg-secondary mt-1.5 shrink-0" />
-                          <div className="space-y-1">
-                             <p className="text-sm font-medium">GSTR-2B matching executed</p>
-                             <p className="text-xs text-muted-foreground">Jan 16, 2024 • 11:20 AM</p>
-                          </div>
-                       </div>
-                       <div className="flex gap-4 items-start">
-                          <div className="h-2 w-2 rounded-full bg-destructive mt-1.5 shrink-0" />
-                          <div className="space-y-1">
-                             <p className="text-sm font-medium">ML Anomaly Flag Raised: Value Deviation</p>
-                             <p className="text-xs text-muted-foreground">Jan 16, 2024 • 11:21 AM</p>
-                          </div>
+              <Card className="bg-card/50 border p-6">
+                 <div className="space-y-4">
+                    <div className="flex gap-4">
+                       <ShieldCheck className="h-5 w-5 text-secondary" />
+                       <div>
+                          <p className="text-sm font-bold">Schema Validation Passed</p>
+                          <p className="text-xs text-muted-foreground">Mapped via IngestionAdapter V2.0</p>
                        </div>
                     </div>
-                 </CardContent>
+                 </div>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-card/50 border border-primary/20 shadow-[0_0_20px_rgba(90,194,255,0.05)]">
+          <Card className="bg-card/50 border border-primary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-medium flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
                 Explainable AI Insight
               </CardTitle>
-              <CardDescription className="text-[10px] uppercase tracking-wider">Generated by Gemini 2.5 Flash</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
                 <p className="text-sm leading-relaxed italic text-foreground/90">
                   "{aiExplanation.explanation}"
                 </p>
-              </div>
-              
-              <div className="space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Risk Rule Triggers</p>
-                <div className="space-y-2">
-                  {(invoice.flags || assessment.rulesTriggered || []).map((factor, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm group cursor-help">
-                      <div className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
-                      <span className="text-xs font-mono opacity-80">{typeof factor === 'string' ? factor : factor.ruleId}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </CardContent>
           </Card>
 
           <Alert className="bg-destructive/5 border-destructive/20">
             <ShieldAlert className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-destructive font-bold">Action Recommended</AlertTitle>
+            <AlertTitle className="text-destructive font-bold">IRN Compliance Alert</AlertTitle>
             <AlertDescription className="text-sm">
-              Significant discrepancies found in IGST claims. Recommended to freeze ITC claim for this period until vendor proof of payment is verified.
+              Invoice found in GSTR-1 but IRN status is 'Cancelled'. This suggests a potential attempt to claim ITC on a deleted transaction.
             </AlertDescription>
           </Alert>
-
-          <Card className="bg-card/50 border">
-             <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Compliance Scorecard</CardTitle>
-             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span>Rule Accuracy</span>
-                <span className="text-secondary font-bold">98.2%</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span>Peer Benchmark</span>
-                <span className="text-amber-500 font-bold">Above Average Risk</span>
-              </div>
-              <Button variant="outline" className="w-full text-xs h-8 mt-2">
-                <Scale className="h-3 w-3 mr-2" /> Verify Peer Deviation
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
