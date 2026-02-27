@@ -1,26 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   ShieldAlert, 
-  TrendingUp,
   Database,
   Activity,
   Zap,
-  Search,
   Users,
   ChevronRight,
   FileText,
-  Building2,
   ArrowUpRight,
-  ArrowDownRight,
   MoreHorizontal,
-  Info,
   CircleCheck,
-  LayoutDashboard
 } from 'lucide-react';
-import { MOCK_VENDORS, MOCK_INVOICES } from './lib/mock-data';
+import { MOCK_VENDORS, MOCK_GRAPH_DATA } from './lib/mock-data';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -36,7 +31,16 @@ import {
   Cell
 } from 'recharts';
 
+// Dynamically import force graph for the dashboard preview
+const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
+
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const kpiData = [
     { 
       label: 'Invoices Reconciled', 
@@ -77,6 +81,29 @@ export default function DashboardPage() {
     { name: '582', value: 582, color: '#ef4444' },
   ];
 
+  // Simplified graph data for the preview
+  const previewGraphData = useMemo(() => {
+    const nodeColors: Record<string, string> = {
+      ROOT_NODE: '#003366',
+      SUPPLIER: '#0099CC',
+      BUYER: '#1E2A38',
+      INVOICE: '#94A3B8',
+    };
+
+    const nodes = MOCK_GRAPH_DATA.nodes
+      .filter(n => ['ROOT_NODE', 'SUPPLIER', 'BUYER', 'INVOICE'].includes(n.type))
+      .slice(0, 15)
+      .map(n => ({
+        ...n,
+        color: nodeColors[n.type as keyof typeof nodeColors] || '#CBD5E1'
+      }));
+
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const links = MOCK_GRAPH_DATA.links.filter(l => nodeIds.has(l.source as string) && nodeIds.has(l.target as string));
+
+    return { nodes, links };
+  }, []);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-700 pb-10">
       {/* KPI Row */}
@@ -97,7 +124,7 @@ export default function DashboardPage() {
                     "rounded-none text-[10px] font-bold py-0.5",
                     kpi.isPositive ? "text-green-600 bg-green-50 border-green-200" : "text-red-600 bg-red-50 border-red-200"
                   )}>
-                    {kpi.isPositive ? <ArrowUpRight className="h-3 w-3 mr-0.5" /> : <ArrowUpRight className="h-3 w-3 mr-0.5" />}
+                    <ArrowUpRight className={cn("h-3 w-3 mr-0.5", !kpi.isPositive && "rotate-90")} />
                     {kpi.change}
                   </Badge>
                 )}
@@ -123,58 +150,49 @@ export default function DashboardPage() {
                 <Database className="h-4 w-4 text-primary" />
                 <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-600">Network Overview</CardTitle>
               </div>
-              <div className="flex items-center gap-2">
-                <MoreHorizontal className="h-4 w-4 text-slate-300" />
-              </div>
+              <Badge className="bg-primary/5 text-primary border-primary/20 rounded-none text-[8px] h-4">LIVE</Badge>
             </CardHeader>
-            <CardContent className="p-8 flex items-center justify-center min-h-[300px]">
-              {/* Simplified Graph Visual */}
-              <div className="relative w-full max-w-sm h-64">
-                {/* Central Invoice Node */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-green-500 flex flex-col items-center justify-center text-white border-4 border-white shadow-lg z-10">
-                  <FileText className="h-6 w-6" />
-                  <span className="text-[8px] font-bold mt-0.5">Invoice</span>
+            <CardContent className="p-0 h-[300px] flex items-center justify-center bg-slate-50/30">
+              {mounted ? (
+                <div className="w-full h-full">
+                  <ForceGraph2D
+                    graphData={previewGraphData}
+                    width={500}
+                    height={300}
+                    nodeRelSize={4}
+                    linkWidth={1}
+                    linkColor={() => '#CBD5E1'}
+                    nodeCanvasObject={(node: any, ctx, globalScale) => {
+                      const label = node.label;
+                      const fontSize = 10 / globalScale;
+                      ctx.beginPath();
+                      ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
+                      ctx.fillStyle = node.color;
+                      ctx.fill();
+                      
+                      if (globalScale > 2) {
+                        ctx.font = `${fontSize}px Inter`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#64748b';
+                        ctx.fillText(label, node.x, node.y + 8);
+                      }
+                    }}
+                    enableNodeDrag={false}
+                    enableZoomInteraction={false}
+                    enablePanInteraction={false}
+                  />
                 </div>
-                
-                {/* Outbound nodes */}
-                <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
-                   <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white border-2 border-white shadow-md">
-                    <Building2 className="h-5 w-5" />
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-600">Buyer</span>
+              ) : (
+                <div className="flex flex-col items-center gap-2 animate-pulse">
+                  <Activity className="h-8 w-8 text-slate-200" />
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Waking Graph Engine...</span>
                 </div>
-
-                <div className="absolute bottom-1/4 left-1/4 -translate-x-1/2 translate-y-1/2 flex flex-col items-center gap-1">
-                   <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center text-white border-2 border-white shadow-md">
-                    <FileText className="h-5 w-5" />
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-600">GSTR-1</span>
-                </div>
-
-                {/* Inbound nodes */}
-                <div className="absolute top-1/4 right-1/4 translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
-                   <div className="w-12 h-12 rounded-full bg-rose-500 flex items-center justify-center text-white border-2 border-white shadow-md">
-                    <Building2 className="h-5 w-5" />
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-600">Supplier</span>
-                </div>
-
-                <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 flex flex-col items-center gap-1">
-                   <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center text-white border-2 border-white shadow-md">
-                    <Activity className="h-5 w-5" />
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-600">Payment</span>
-                </div>
-
-                {/* Connecting Lines (Simulated) */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
-                  <line x1="25%" y1="25%" x2="50%" y2="50%" stroke="black" strokeWidth="2" />
-                  <line x1="25%" y1="75%" x2="50%" y2="50%" stroke="black" strokeWidth="2" />
-                  <line x1="75%" y1="25%" x2="50%" y2="50%" stroke="black" strokeWidth="2" />
-                  <line x1="75%" y1="75%" x2="50%" y2="50%" stroke="black" strokeWidth="2" />
-                  <text x="32%" y="38%" fontSize="8" fontWeight="bold">REPORTED IN</text>
-                  <text x="32%" y="62%" fontSize="8" fontWeight="bold">PAID TAX</text>
-                </svg>
+              )}
+              
+              <div className="absolute bottom-4 left-4 p-3 bg-white/80 border border-slate-100 backdrop-blur-sm shadow-sm pointer-events-none">
+                <p className="text-[9px] font-bold text-primary uppercase tracking-widest">Cluster Topology</p>
+                <p className="text-[8px] text-slate-500 font-medium">Deterministic statutory traversal</p>
               </div>
             </CardContent>
           </Card>
