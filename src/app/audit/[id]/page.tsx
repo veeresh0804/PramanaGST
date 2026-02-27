@@ -30,7 +30,7 @@ export default function AuditReportPage() {
   }, []);
 
   const auditData = useMemo(() => {
-    const isCluster = id.startsWith('FRAUD-RING');
+    const isCluster = id?.startsWith('FRAUD-RING');
     let title = "Statutory Evidence Log";
     let invoices = [];
     let totalMismatch = 0;
@@ -151,7 +151,7 @@ export default function AuditReportPage() {
                         <p className="text-[10px] text-slate-500 font-mono">{inv.vendorGstin}</p>
                       </td>
                       <td className="px-4 py-3 italic text-slate-600 uppercase text-[10px]">
-                        ISSUED -> REPORTED -> UNPAID
+                        ISSUED {"->"} REPORTED {"->"} UNPAID
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-bold">
                         ₹{inv.totalAmount.toLocaleString()}
