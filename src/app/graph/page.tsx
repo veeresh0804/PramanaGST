@@ -1,4 +1,3 @@
-
 'use client';
 
 import dynamic from 'next/dynamic';
@@ -34,18 +33,18 @@ export default function KnowledgeGraphPage() {
 
   const graphData = useMemo(() => {
     const nodeColors: Record<string, string> = {
-      TAXPAYER: '#5AC2FF',
-      INVOICE: '#4DE0E6',
-      IRN: '#f59e0b',
-      RETURN: '#10b981',
-      PAYMENT: '#8b5cf6'
+      TAXPAYER: '#1E2A38', // Deep Navy
+      INVOICE: '#4A5568', // Slate
+      IRN: '#2D3748', // Charcoal
+      RETURN: '#718096', // Light Slate
+      PAYMENT: '#4A5568'
     };
 
     return {
       nodes: MOCK_GRAPH_DATA.nodes.map(n => ({
         ...n,
-        color: n.riskLevel === 'CRITICAL' ? '#ef4444' : nodeColors[n.type] || '#fff',
-        size: n.type === 'TAXPAYER' ? 8 : 4
+        color: n.riskLevel === 'CRITICAL' ? '#991b1b' : nodeColors[n.type] || '#1E2A38',
+        size: n.type === 'TAXPAYER' ? 10 : 6
       })),
       links: MOCK_GRAPH_DATA.links.map(l => ({
         ...l,
@@ -57,106 +56,101 @@ export default function KnowledgeGraphPage() {
   if (!mounted) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 h-full flex flex-col">
-      <div className="flex items-center justify-between">
+    <div className="space-y-10 animate-in fade-in duration-700 h-full flex flex-col pb-10">
+      <div className="flex items-end justify-between border-b border-border pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-headline text-3xl font-bold tracking-tight">Pramāṇa Graph Explorer</h1>
-          <p className="text-muted-foreground">Deterministic traversal of tax flows, IRN linkage, and circular trading networks.</p>
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Pramāṇa Relationship Engine</span>
+          <h1 className="text-4xl font-extrabold tracking-tight text-primary">Knowledge Graph</h1>
         </div>
-        <div className="flex gap-2">
-          <div className="relative w-64">
+        <div className="flex gap-4">
+          <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-8 bg-card/50" placeholder="Search GSTIN or IRN..." />
+            <Input className="pl-9 h-10 w-64 border-border rounded-sm shadow-sm" placeholder="Search Node Reference..." />
           </div>
-          <Button variant="secondary" className="gap-2">
-            <Filter className="h-4 w-4" /> Filter Nodes
+          <Button variant="outline" className="h-10 border-border rounded-sm shadow-sm gap-2">
+            <Filter className="h-4 w-4" /> Traversal Filters
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 min-h-[600px] grid lg:grid-cols-4 gap-6">
-        <div id="graph-container" className="lg:col-span-3 relative rounded-xl border graph-container overflow-hidden group shadow-2xl">
+      <div className="flex-1 min-h-[600px] grid lg:grid-cols-4 gap-8">
+        <div id="graph-container" className="lg:col-span-3 relative rounded-sm border shadow-inner overflow-hidden graph-container group">
           <ForceGraph2D
             graphData={graphData}
             width={dimensions.width}
             height={dimensions.height}
-            backgroundColor="#1D2126"
+            backgroundColor="#F8FAFC"
             nodeLabel={(node: any) => `${node.type}: ${node.label}`}
             nodeColor="color"
             nodeRelSize={6}
-            linkColor={() => 'rgba(255,255,255,0.15)'}
-            linkDirectionalParticles={2}
-            linkDirectionalArrowLength={3}
+            linkColor={() => '#cbd5e1'}
+            linkDirectionalParticles={1}
+            linkDirectionalArrowLength={4}
             linkDirectionalArrowRelPos={1}
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.label;
-              const fontSize = 10 / globalScale;
-              ctx.font = `${fontSize}px Inter`;
+              const fontSize = 11 / globalScale;
+              ctx.font = `${fontSize}px "Inter", sans-serif`;
               
               ctx.fillStyle = node.color;
               ctx.beginPath();
-              ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+              if (node.type === 'TAXPAYER') {
+                ctx.rect(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
+              } else {
+                ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+              }
               ctx.fill();
 
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-              ctx.fillText(label, node.x - ctx.measureText(label).width / 2, node.y + node.size + 4);
+              ctx.fillStyle = '#1E2A38';
+              ctx.fillText(label, node.x - ctx.measureText(label).width / 2, node.y + node.size + 8);
             }}
           />
           
-          <div className="absolute top-6 right-6 text-[10px] font-bold tracking-widest text-muted-foreground uppercase bg-black/40 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm">
-            Knowledge Engine: ACTIVE • Nodes: {MOCK_GRAPH_DATA.nodes.length}
+          <div className="absolute top-6 left-6 text-[10px] font-bold tracking-[0.2em] text-primary uppercase bg-white border border-border px-4 py-2 shadow-sm">
+            STATUS: ACTIVE TRAVERSAL • NODES: {MOCK_GRAPH_DATA.nodes.length}
           </div>
         </div>
 
-        <div className="space-y-6">
-          <Card className="bg-card/50 border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Network className="h-4 w-4 text-primary" />
-                Traversal Metrics
-              </CardTitle>
+        <div className="space-y-8">
+          <Card className="rounded-sm border shadow-sm bg-white">
+            <CardHeader className="bg-muted/20 border-b">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-primary">Network Metadata</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="pt-6 space-y-6">
               <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Topology State</p>
+                <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Logic State</p>
                 <div className="flex items-center gap-2">
-                   <p className="text-sm font-medium">Deterministic</p>
-                   <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[8px] h-4">SYNCED</Badge>
+                   <p className="text-sm font-bold text-primary">Deterministic</p>
+                   <Badge className="bg-green-600 text-white border-none text-[8px] h-4 uppercase rounded-sm">Verified</Badge>
                 </div>
               </div>
-              <div className="pt-4 border-t border-white/5 space-y-3">
-                 <div className="flex items-center gap-3 text-xs">
-                    <div className="h-3 w-3 rounded bg-[#5AC2FF]" />
+              <div className="pt-6 border-t border-dashed space-y-4">
+                 <div className="flex items-center gap-3 text-xs font-bold text-primary">
+                    <div className="h-3 w-3 bg-[#1E2A38] rounded-sm" />
                     <span>Taxpayer Entity</span>
                  </div>
-                 <div className="flex items-center gap-3 text-xs">
-                    <div className="h-3 w-3 rounded bg-[#4DE0E6]" />
-                    <span>Invoice Transaction</span>
+                 <div className="flex items-center gap-3 text-xs font-bold text-primary">
+                    <div className="h-3 w-3 bg-[#4A5568] rounded-full" />
+                    <span>Transaction Node</span>
                  </div>
-                 <div className="flex items-center gap-3 text-xs">
-                    <div className="h-3 w-3 rounded bg-[#f59e0b]" />
-                    <span>IRN Node</span>
-                 </div>
-                 <div className="flex items-center gap-3 text-xs">
-                    <div className="h-3 w-3 rounded bg-[#8b5cf6]" />
-                    <span>Tax Payment</span>
+                 <div className="flex items-center gap-3 text-xs font-bold text-destructive">
+                    <div className="h-3 w-3 bg-[#991b1b] rounded-sm" />
+                    <span>High Risk Anomaly</span>
                  </div>
               </div>
-              <Button size="sm" className="w-full text-[11px] h-8 gap-2" variant="outline">
-                <GitBranch className="h-3 w-3" /> Trace Lineage
+              <Button size="sm" className="w-full text-[10px] font-bold uppercase h-9 bg-primary text-white rounded-sm shadow-sm">
+                <GitBranch className="h-4 w-4 mr-2" /> Trace Lineage
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 border border-destructive/20">
+          <Card className="rounded-sm border-2 border-destructive/20 shadow-sm bg-destructive/5">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-destructive">
-                <ShieldAlert className="h-4 w-4" /> Anomaly Detection
-              </CardTitle>
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-destructive">System Alert</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-[11px] leading-relaxed text-muted-foreground">
-                Isolation Forest detected a high-degree loop involving 3 shell entities in the JAN-24 period. IRN cancellations triggered on path traversal.
+              <p className="text-[11px] leading-relaxed font-bold text-destructive/80 italic">
+                A recursive path detected between 3 shell nodes in Sector 4. Manual intervention required for IRN cancellation audit.
               </p>
             </CardContent>
           </Card>

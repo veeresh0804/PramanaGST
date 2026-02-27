@@ -4,39 +4,31 @@
 
 @layer base {
   :root {
-    --background: 212 14% 13%;
-    --foreground: 210 20% 98%;
-    --card: 212 14% 15%;
-    --card-foreground: 210 20% 98%;
-    --popover: 212 14% 13%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 202 100% 68%;
-    --primary-foreground: 212 14% 13%;
-    --secondary: 182 78% 59%;
-    --secondary-foreground: 212 14% 13%;
-    --muted: 212 14% 20%;
-    --muted-foreground: 215 15% 75%;
-    --accent: 182 78% 59%;
-    --accent-foreground: 212 14% 13%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 212 14% 25%;
-    --input: 212 14% 25%;
-    --ring: 202 100% 68%;
-    --radius: 0.75rem;
-    --chart-1: 202 100% 68%;
-    --chart-2: 182 78% 59%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 212 14% 11%;
-    --sidebar-foreground: 215 15% 75%;
-    --sidebar-primary: 202 100% 68%;
-    --sidebar-primary-foreground: 212 14% 13%;
-    --sidebar-accent: 212 14% 20%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 212 14% 20%;
-    --sidebar-ring: 202 100% 68%;
+    --background: 210 20% 96%; /* #F4F6F8 */
+    --foreground: 222 47% 11%; /* Dark charcoal text */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 215 32% 17%; /* Deep Navy #1E2A38 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 215 16% 47%; /* Slate Blue */
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 20% 90%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 215 32% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 35%; /* Professional Dark Red */
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 32% 17%;
+    --radius: 0.25rem; /* Sharp 4px edges */
+    --chart-1: 215 32% 17%;
+    --chart-2: 215 16% 47%;
+    --chart-3: 180 50% 30%; /* Muted Teal */
+    --chart-4: 35 70% 40%; /* Professional Amber */
+    --chart-5: 0 70% 35%;
   }
 }
 
@@ -47,8 +39,24 @@
   body {
     @apply bg-background text-foreground font-body;
   }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline font-bold tracking-tight text-primary;
+  }
 }
 
 .graph-container {
-  background: radial-gradient(circle at center, #232a31 0%, #1d2126 100%);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* Custom scrollbar for professional feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
 }
