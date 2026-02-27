@@ -1,4 +1,3 @@
-
 import { Invoice, Vendor, RiskAssessment, GraphNode, GraphEdge } from '@/domain/models/entities';
 
 export const MY_COMPANY_GSTIN = '27MYCOMP1234F1Z';
@@ -11,6 +10,7 @@ export const MOCK_VENDORS: Vendor[] = [
   { gstin: '24PLMOK5544N6M7', name: 'Vibrant Textiles', riskScore: 76, riskLevel: 'HIGH', networkMetrics: { chainDepth: 6, clusterRisk: 0.7, degreeCentrality: 15 } },
   { gstin: '27LOOPA1111A1Z1', name: 'Shell Entity Alpha', riskScore: 98, riskLevel: 'CRITICAL', networkMetrics: { chainDepth: 12, clusterRisk: 0.99, degreeCentrality: 30 } },
   { gstin: '27LOOPB2222B2Z2', name: 'Shell Entity Beta', riskScore: 98, riskLevel: 'CRITICAL', networkMetrics: { chainDepth: 12, clusterRisk: 0.99, degreeCentrality: 30 } },
+  { gstin: '27LOOPC3333C3Z3', name: 'Shell Entity Gamma', riskScore: 95, riskLevel: 'CRITICAL', networkMetrics: { chainDepth: 10, clusterRisk: 0.92, degreeCentrality: 25 } },
 ];
 
 export const MOCK_INVOICES: Invoice[] = [
@@ -21,10 +21,14 @@ export const MOCK_INVOICES: Invoice[] = [
   { id: 'INV-2024-005', invoiceNumber: 'PR-1100', vendorGstin: '29ABCDE1234F1Z5', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-02-01'), taxableAmount: 80000, cgst: 7200, sgst: 7200, igst: 0, totalAmount: 94400, source: 'GSTR_1', status: 'MATCHED', riskScore: 15, flags: [], irn: 'pr110...x99', einvoiceStatus: 'Generated', paymentCoverageRatio: 1.0, itcClaimed: 14400 },
   { id: 'INV-2024-006', invoiceNumber: 'SA-9001', vendorGstin: '27LOOPA1111A1Z1', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-02-05'), taxableAmount: 500000, cgst: 45000, sgst: 45000, igst: 0, totalAmount: 590000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 98, flags: ['CIRCULAR_TRADING_LOOP', 'HIGH_VALUE_ANOMALY'], irn: 'sa900...a01', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.05, itcClaimed: 90000 },
   { id: 'INV-2024-007', invoiceNumber: 'NS-3001', vendorGstin: '07KJHGF9876M1Z2', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-02-10'), taxableAmount: 30000, cgst: 2700, sgst: 2700, igst: 0, totalAmount: 35400, source: 'GSTR_1', status: 'PARTIAL_MATCH', riskScore: 55, flags: ['TAX_PAYMENT_MISMATCH'], irn: 'ns300...n01', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.6, itcClaimed: 5400 },
+  { id: 'INV-2024-008', invoiceNumber: 'VT-6612', vendorGstin: '24PLMOK5544N6M7', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-02-12'), taxableAmount: 120000, cgst: 10800, sgst: 10800, igst: 0, totalAmount: 141600, source: 'GSTR_1', status: 'MATCHED', riskScore: 35, flags: [], irn: 'v6612...p05', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.95, itcClaimed: 21600 },
+  { id: 'INV-2024-009', invoiceNumber: 'GL-8900', vendorGstin: '27FGHIJ5678K2L3', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-02-14'), taxableAmount: 40000, cgst: 0, sgst: 0, igst: 7200, totalAmount: 47200, source: 'GSTR_1', status: 'MATCHED', riskScore: 8, flags: [], irn: 'gl890...q06', einvoiceStatus: 'Generated', paymentCoverageRatio: 1.0, itcClaimed: 7200 },
+  { id: 'INV-2024-010', invoiceNumber: 'ZM-4500', vendorGstin: '19OPQRS3456T5U6', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-02-15'), taxableAmount: 300000, cgst: 27000, sgst: 27000, igst: 0, totalAmount: 354000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 92, flags: ['ITC_OVERCLAIMED'], irn: 'zm450...r07', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.2, itcClaimed: 54000 },
   { id: 'OUT-2024-001', invoiceNumber: 'SL-5512', vendorGstin: MY_COMPANY_GSTIN, recipientGstin: '07KJHGF9876M1Z2', invoiceDate: new Date('2024-02-05'), taxableAmount: 300000, cgst: 27000, sgst: 27000, igst: 0, totalAmount: 354000, source: 'GSTR_1', status: 'MATCHED', riskScore: 5, flags: [], irn: 'irn-out-1', einvoiceStatus: 'Generated', paymentCoverageRatio: 1.0 },
   { id: 'OUT-2024-002', invoiceNumber: 'SL-5600', vendorGstin: MY_COMPANY_GSTIN, recipientGstin: '27FGHIJ5678K2L3', invoiceDate: new Date('2024-02-15'), taxableAmount: 120000, cgst: 0, sgst: 0, igst: 21600, totalAmount: 141600, source: 'GSTR_1', status: 'MATCHED', riskScore: 2, flags: [], irn: 'irn-out-2', einvoiceStatus: 'Generated', paymentCoverageRatio: 1.0 },
   { id: 'INV-LOOP-001', invoiceNumber: 'LP-111', vendorGstin: '27LOOPA1111A1Z1', recipientGstin: '27LOOPB2222B2Z2', invoiceDate: new Date('2024-01-01'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'lp111...x1', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
-  { id: 'INV-LOOP-002', invoiceNumber: 'LP-222', vendorGstin: '27LOOPB2222B2Z2', recipientGstin: '27LOOPA1111A1Z1', invoiceDate: new Date('2024-01-05'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'lp222...y2', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
+  { id: 'INV-LOOP-002', invoiceNumber: 'LP-222', vendorGstin: '27LOOPB2222B2Z2', recipientGstin: '27LOOPC3333C3Z3', invoiceDate: new Date('2024-01-05'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'lp222...y2', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
+  { id: 'INV-LOOP-003', invoiceNumber: 'LP-333', vendorGstin: '27LOOPC3333C3Z3', recipientGstin: '27LOOPA1111A1Z1', invoiceDate: new Date('2024-01-10'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'lp333...z3', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
 ];
 
 export const MOCK_GRAPH_DATA = {
@@ -37,17 +41,17 @@ export const MOCK_GRAPH_DATA = {
     { id: '24PLMOK5544N6M7', label: 'Vibrant Textiles', type: 'SUPPLIER' as const, riskLevel: 'HIGH' },
     { id: '27LOOPA1111A1Z1', label: 'Shell Alpha', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
     { id: '27LOOPB2222B2Z2', label: 'Shell Beta', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
+    { id: '27LOOPC3333C3Z3', label: 'Shell Gamma', type: 'SUPPLIER' as const, riskLevel: 'CRITICAL' },
     // Outbound Buyer
     { id: '07KJHGF9876M1Z2', label: 'Nexus Supply Chain', type: 'BUYER' as const, riskLevel: 'MEDIUM' },
     // Invoices
-    { id: 'INV-2024-001', label: 'PR-1029', type: 'INVOICE' as const, riskLevel: 'HIGH', properties: { value: 118000 } },
-    { id: 'INV-2024-002', label: 'GL-8821', type: 'INVOICE' as const, riskLevel: 'LOW', properties: { value: 59000 } },
-    { id: 'INV-2024-003', label: 'ZM-4491', type: 'INVOICE' as const, riskLevel: 'CRITICAL', properties: { value: 236000 } },
-    { id: 'INV-2024-004', label: 'VT-5501', type: 'INVOICE' as const, riskLevel: 'MEDIUM', properties: { value: 177000 } },
-    { id: 'INV-2024-006', label: 'SA-9001', type: 'INVOICE' as const, riskLevel: 'CRITICAL', properties: { value: 590000 } },
-    { id: 'OUT-2024-001', label: 'SL-5512', type: 'INVOICE' as const, riskLevel: 'LOW', properties: { value: 354000 } },
-    { id: 'INV-LOOP-001', label: 'LP-111', type: 'INVOICE' as const, riskLevel: 'CRITICAL', properties: { value: 1180000 } },
-    { id: 'INV-LOOP-002', label: 'LP-222', type: 'INVOICE' as const, riskLevel: 'CRITICAL', properties: { value: 1180000 } },
+    ...MOCK_INVOICES.map(inv => ({
+      id: inv.id,
+      label: inv.invoiceNumber,
+      type: 'INVOICE' as const,
+      riskLevel: inv.riskScore > 90 ? 'CRITICAL' : inv.riskScore > 70 ? 'HIGH' : inv.riskScore > 40 ? 'MEDIUM' : 'LOW',
+      properties: { value: inv.totalAmount }
+    })),
     // Metadata Nodes
     { id: 'IRN-ZM-4491', label: 'IRN VALID', type: 'IRN' as const, riskLevel: 'LOW' },
     { id: 'RET-JAN-24', label: 'JAN-2024', type: 'RETURN_PERIOD' as const, riskLevel: 'LOW' },
@@ -78,7 +82,9 @@ export const MOCK_GRAPH_DATA = {
     { source: '27LOOPA1111A1Z1', target: 'INV-LOOP-001', type: 'ISSUED' as const, status: 'RISK' as const },
     { source: 'INV-LOOP-001', target: '27LOOPB2222B2Z2', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
     { source: '27LOOPB2222B2Z2', target: 'INV-LOOP-002', type: 'ISSUED' as const, status: 'RISK' as const },
-    { source: 'INV-LOOP-002', target: '27LOOPA1111A1Z1', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+    { source: 'INV-LOOP-002', target: '27LOOPC3333C3Z3', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
+    { source: '27LOOPC3333C3Z3', target: 'INV-LOOP-003', type: 'ISSUED' as const, status: 'RISK' as const },
+    { source: 'INV-LOOP-003', target: '27LOOPA1111A1Z1', type: 'RECEIVED_BY' as const, status: 'RISK' as const },
   ] as GraphEdge[]
 };
 

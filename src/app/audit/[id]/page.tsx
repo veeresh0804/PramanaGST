@@ -60,20 +60,27 @@ export default function AuditReportPage() {
     ];
 
     if (id === 'FRAUD-RING-72') {
-      invoices = MOCK_INVOICES.filter(inv => inv.id.startsWith('INV-LOOP'));
-      title = `Fraud Cluster Audit: Shell Network Alpha-Epsilon`;
-      totalMismatch = 180000;
+      invoices = MOCK_INVOICES.filter(inv => inv.flags?.includes('CIRCULAR_TRADING_LOOP'));
+      title = `Fraud Cluster Audit: Shell Network Alpha-Gamma`;
+      totalMismatch = 3540000;
       issues = [
         { code: 'ERR-702', title: 'Circular Trading Loop', desc: 'Multi-node network identified where tax credits are cycling without commercial substance.' },
         { code: 'ERR-905', title: 'High-Velocity Trading', desc: 'Transaction volume exceeds reported operational capacity of involved shell nodes.' }
       ];
     } else if (id === 'FRAUD-RING-91') {
-      invoices = MOCK_INVOICES.filter(inv => inv.id === 'INV-2024-003');
-      title = `Fraud Cluster Audit: Zenith Cluster Analysis`;
-      totalMismatch = 36000;
+      invoices = MOCK_INVOICES.filter(inv => inv.id === 'INV-2024-003' || inv.flags?.includes('ITC_CHAIN_BROKEN'));
+      title = `Fraud Cluster Audit: Zenith & ABC Cluster Analysis`;
+      totalMismatch = 272000;
       issues = [
         { code: 'ERR-401', title: 'ITC Chain Break', desc: 'Direct upstream supplier (Zenith) has failed to remit tax liability for the reported period.' },
         { code: 'ERR-302', title: 'GSTR-2B Mismatch', desc: 'Recipient claiming ITC on invoices not present in the portal-generated 2B dataset.' }
+      ];
+    } else if (id === 'FRAUD-RING-105') {
+      invoices = MOCK_INVOICES.filter(i => i.vendorGstin === '07KJHGF9876M1Z2' && i.status === 'PARTIAL_MATCH');
+      title = `Transaction Audit: Nexus Supply Chain Cluster`;
+      totalMismatch = 35400;
+      issues = [
+        { code: 'ERR-V105', title: 'Partial Statutory Match', desc: 'GSTR-1 exists but tax payment evidence is only partially recorded.' }
       ];
     } else {
       const inv = MOCK_INVOICES.find(i => i.id === id);
@@ -218,7 +225,7 @@ export default function AuditReportPage() {
                         <p className="text-[10px] text-slate-500 font-mono">{inv.vendorGstin}</p>
                       </td>
                       <td className="px-4 py-3 italic text-slate-600 uppercase text-[10px]">
-                        ISSUED {"->"} REPORTED {"->"} UNPAID
+                        ISSUED {"->"} REPORTED {"->"} {inv.paymentCoverageRatio === 0 ? 'UNPAID' : inv.paymentCoverageRatio < 1 ? 'PARTIAL' : 'PAID'}
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-bold">
                         ₹{inv.totalAmount.toLocaleString()}

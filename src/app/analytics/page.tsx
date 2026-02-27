@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -50,9 +49,30 @@ export default function AnalyticsPage() {
 
   const fraudClusters = useMemo(() => {
     const loopInvoices = MOCK_INVOICES.filter(inv => inv.flags?.includes('CIRCULAR_TRADING_LOOP'));
+    const chainBreakInvoices = MOCK_INVOICES.filter(inv => inv.flags?.includes('ITC_CHAIN_BROKEN'));
+    
     return [
-      { id: 'FRAUD-RING-72', title: 'Shell Network Alpha-Epsilon', invoices: loopInvoices.filter(i => i.id.startsWith('INV-LOOP')), totalMismatch: 180000, severity: 'CRITICAL' },
-      { id: 'FRAUD-RING-91', title: 'Zenith Cluster Analysis', invoices: loopInvoices.filter(i => i.id === 'INV-2024-003'), totalMismatch: 36000, severity: 'HIGH' }
+      { 
+        id: 'FRAUD-RING-72', 
+        title: 'Shell Network Alpha-Epsilon (Loop Detected)', 
+        invoices: loopInvoices.filter(i => i.id.startsWith('INV-LOOP')), 
+        totalMismatch: 3540000, 
+        severity: 'CRITICAL' 
+      },
+      { 
+        id: 'FRAUD-RING-91', 
+        title: 'Zenith Cluster Analysis (Chain Break)', 
+        invoices: chainBreakInvoices.concat(MOCK_INVOICES.filter(i => i.id === 'INV-2024-003')), 
+        totalMismatch: 272000, 
+        severity: 'HIGH' 
+      },
+      {
+        id: 'FRAUD-RING-105',
+        title: 'Nexus Supply Chain Anomaly',
+        invoices: MOCK_INVOICES.filter(i => i.vendorGstin === '07KJHGF9876M1Z2' && i.status === 'PARTIAL_MATCH'),
+        totalMismatch: 35400,
+        severity: 'MEDIUM'
+      }
     ].filter(c => c.invoices.length > 0);
   }, []);
 
