@@ -12,7 +12,6 @@ import {
   ChevronRight,
   FileText,
   ArrowUpRight,
-  MoreHorizontal,
   CircleCheck,
   Bell,
   ArrowRight
@@ -329,25 +328,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Link>
-      </div>
-
-      {/* Statutory Footer Disclaimer */}
-      <div className="p-8 bg-slate-900 text-white rounded-none shadow-xl border-l-8 border-l-accent relative overflow-hidden">
-         <div className="absolute top-0 right-0 p-8 opacity-5">
-            <ShieldAlert className="h-32 w-32" />
-         </div>
-         <div className="flex flex-col md:flex-row md:items-center gap-6">
-           <div className="h-16 w-16 rounded bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
-             <CircleCheck className="h-10 w-10 text-accent" />
-           </div>
-           <div className="space-y-2 flex-1">
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-accent">Pramana Intelligence Unit</p>
-              <h2 className="text-2xl font-black tracking-tight">Statutory Monitoring Status: ACTIVE</h2>
-              <p className="text-sm text-white/60 leading-relaxed max-w-3xl">
-                This dashboard presents a consolidated view of your compliance health. All metrics are calculated using the <strong>Multi-Factor Risk Model 2.0</strong>, which weights Payment Coverage at 40%, ITC Discipline at 30%, and Network Exposure at 20%.
-              </p>
-           </div>
-         </div>
       </div>
     </div>
   );
