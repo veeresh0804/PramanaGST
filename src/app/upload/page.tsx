@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -34,15 +35,13 @@ export default function UploadPage() {
       localProgress += 4;
       
       if (localProgress >= 100) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         setProgress(100);
         setIsProcessing(false);
         setCurrentStep(null);
-        // We trigger the toast here, which is safe inside an event handler's asynchronous callback
-        toast({
-          title: "Matching Engine Complete",
-          description: "Successfully processed 1,240 records. 12 risk flags raised.",
-        });
       } else {
         setProgress(localProgress);
         const currentStepIdx = Math.floor((localProgress / 100) * totalSteps);
@@ -50,6 +49,16 @@ export default function UploadPage() {
       }
     }, 150);
   };
+
+  // Safe side-effect handling for completion
+  useEffect(() => {
+    if (progress === 100 && !isProcessing) {
+      toast({
+        title: "Matching Engine Complete",
+        description: "Successfully processed 1,240 records. 12 risk flags raised.",
+      });
+    }
+  }, [progress, isProcessing, toast]);
 
   useEffect(() => {
     return () => {
