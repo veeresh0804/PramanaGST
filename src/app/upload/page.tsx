@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { UploadCloud, FileText, CheckCircle, Info, Database, Loader2, Zap, AlertCircle } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle, Database, Loader2, Zap, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -39,9 +39,18 @@ export default function UploadPage() {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
+        // Use functional updates to ensure consistency
         setProgress(100);
         setIsProcessing(false);
         setCurrentStep(null);
+        
+        // Trigger toast in a separate microtask to avoid "update while rendering" errors
+        setTimeout(() => {
+          toast({
+            title: "Matching Engine Complete",
+            description: "Successfully processed 1,240 records. 12 risk flags raised.",
+          });
+        }, 0);
       } else {
         setProgress(localProgress);
         const currentStepIdx = Math.floor((localProgress / 100) * totalSteps);
@@ -49,16 +58,6 @@ export default function UploadPage() {
       }
     }, 150);
   };
-
-  // Safe side-effect handling for completion
-  useEffect(() => {
-    if (progress === 100 && !isProcessing) {
-      toast({
-        title: "Matching Engine Complete",
-        description: "Successfully processed 1,240 records. 12 risk flags raised.",
-      });
-    }
-  }, [progress, isProcessing, toast]);
 
   useEffect(() => {
     return () => {
