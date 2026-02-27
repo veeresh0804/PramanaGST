@@ -1,13 +1,13 @@
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { UploadCloud, FileText, CheckCircle, Database, Loader2, Zap, AlertCircle } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle, Database, Loader2, Zap, AlertCircle, FileSpreadsheet, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function UploadPage() {
   const { toast } = useToast();
@@ -24,14 +24,13 @@ export default function UploadPage() {
     "Syncing results to graph database..."
   ];
 
-  // Logic to handle completion outside of the interval loop to avoid setState in render
   useEffect(() => {
     if (progress === 100 && isProcessing) {
       setIsProcessing(false);
       setCurrentStep(null);
       toast({
-        title: "Matching Engine Complete",
-        description: "Successfully processed 1,240 records. 12 risk flags raised.",
+        title: "Reconciliation Process Complete",
+        description: "Successfully processed 1,240 records from PR_JAN. 12 risk flags raised for investigation.",
       });
     }
   }, [progress, isProcessing, toast]);
@@ -71,111 +70,112 @@ export default function UploadPage() {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-top-2 duration-500">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-headline text-3xl font-bold tracking-tight">Data Ingestion Hub</h1>
-        <p className="text-muted-foreground">Securely ingest purchase registers and GSTR data into the PramanaGST risk engine.</p>
+    <div className="space-y-8 animate-in slide-in-from-top-2 duration-500 pb-10">
+      <div className="flex flex-col gap-1 border-b border-slate-200 pb-6">
+        <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">Data Ingestion & Processing Hub</h1>
+        <p className="text-muted-foreground font-medium">Securely ingest purchase registers and statutory GSTR data into the Pramana intelligence engine.</p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-6">
-          <Card className="bg-card/50 border border-dashed border-primary/40 hover:border-primary transition-all group cursor-pointer hover:bg-primary/5">
-            <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <UploadCloud className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-bold">Purchase Register (ERP)</h3>
-              <p className="text-sm text-muted-foreground mt-1 mb-6 max-w-[250px]">Upload CSV/XLSX exports from SAP, Tally, or custom ERP systems.</p>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="text-[8px] border-primary/20 opacity-50">SAP S/4HANA</Badge>
-                <Badge variant="outline" className="text-[8px] border-primary/20 opacity-50">TALLY PRIME</Badge>
-              </div>
-              <Button size="sm" className="mt-6 bg-primary text-primary-foreground">Select Invoices</Button>
-            </CardContent>
-          </Card>
+          <div className="bg-white border p-12 text-center group cursor-pointer hover:bg-slate-50 transition-all border-t-4 border-t-accent shadow-sm">
+            <div className="h-20 w-20 rounded-full bg-accent/5 flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform border border-accent/10">
+              <UploadCloud className="h-10 w-10 text-accent" />
+            </div>
+            <h3 className="text-xl font-bold text-primary mb-2">Internal Purchase Register (ERP)</h3>
+            <p className="text-sm text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">Statutory import of internal records from SAP, Tally Prime, or Oracle ERP modules.</p>
+            <div className="flex justify-center gap-3 mb-8">
+              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest border-slate-200">CSV</Badge>
+              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest border-slate-200">XLSX</Badge>
+              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest border-slate-200">JSON</Badge>
+            </div>
+            <Button className="bg-primary text-white font-bold text-xs uppercase tracking-widest rounded-none h-11 px-8 shadow-md">Select Case Files</Button>
+          </div>
 
-          <Card className="bg-card/50 border border-dashed border-secondary/40 hover:border-secondary transition-all group cursor-pointer hover:bg-secondary/5">
-            <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="h-16 w-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Database className="h-8 w-8 text-secondary" />
-              </div>
-              <h3 className="text-lg font-bold">GSTR-2A / 2B Portal Data</h3>
-              <p className="text-sm text-muted-foreground mt-1 mb-6 max-w-[250px]">Direct portal exports for automated multi-field matching.</p>
-              <Button size="sm" variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">Upload Portal Export</Button>
-            </CardContent>
-          </Card>
+          <div className="bg-white border p-12 text-center group cursor-pointer hover:bg-slate-50 transition-all border-t-4 border-t-primary shadow-sm">
+            <div className="h-20 w-20 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform border border-primary/10">
+              <Server className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-primary mb-2">GSTR-2A / 2B Portal Artifacts</h3>
+            <p className="text-sm text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">Direct statutory exports from the GST portal for deterministic multi-field verification.</p>
+            <Button variant="outline" className="border-primary text-primary font-bold text-xs uppercase tracking-widest rounded-none h-11 px-8 shadow-sm">Upload Portal Export</Button>
+          </div>
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-card/50 border shadow-lg overflow-hidden relative">
+          <Card className="rounded-none border shadow-lg overflow-hidden relative bg-white">
             {isProcessing && (
-              <div className="absolute top-0 left-0 h-1 bg-primary animate-pulse w-full z-10" />
+              <div className="absolute top-0 left-0 h-1 bg-accent animate-pulse w-full z-10" />
             )}
-            <CardHeader>
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <Zap className="h-4 w-4 text-secondary" />
-                Real-Time Matching Engine
+            <CardHeader className="bg-slate-50 border-b">
+              <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-primary">
+                <Zap className="h-4 w-4 text-accent" />
+                Deterministic Execution Engine
               </CardTitle>
-              <CardDescription>Status of currently queued data pipelines.</CardDescription>
+              <CardDescription className="text-xs font-medium">Monitoring status of active data processing pipelines.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <CardContent className="space-y-8 p-8">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
                   <span className="flex items-center gap-2">
-                     {isProcessing ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <CheckCircle className="h-3 w-3 text-secondary" />}
-                     {isProcessing ? "Processing Stream..." : "Ready for batch processing"}
+                     {isProcessing ? <Loader2 className="h-4 w-4 animate-spin text-accent" /> : <CheckCircle className="h-4 w-4 text-accent" />}
+                     {isProcessing ? "ENGINE PROCESSING STREAM..." : "ENGINE READY FOR EXECUTION"}
                   </span>
-                  <span className="font-mono">{progress}%</span>
+                  <span className="font-mono text-sm">{progress}%</span>
                 </div>
-                <Progress value={progress} className="h-1.5 bg-muted" />
+                <Progress value={progress} className="h-2 bg-slate-100 rounded-none overflow-hidden [&>div]:bg-accent transition-all" />
                 {currentStep && (
-                   <p className="text-[10px] text-primary italic font-medium animate-pulse">{currentStep}</p>
+                   <div className="flex items-center gap-2">
+                      <div className="h-1 w-1 rounded-full bg-accent animate-ping" />
+                      <p className="text-[10px] text-accent italic font-bold tracking-wider">{currentStep}</p>
+                   </div>
                 )}
               </div>
               
-              <div className="space-y-3">
-                 <div className="flex items-center gap-3 p-3 rounded-md bg-muted/20 border border-white/5 group hover:bg-muted/30 transition-colors">
-                    <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+              <div className="space-y-4 pt-4">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Batch Queue</p>
+                 <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 shadow-inner group transition-all">
+                    <div className="h-10 w-10 rounded bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="h-5 w-5 text-slate-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">PR_JAN_2024_CONSOLIDATED.csv</p>
-                      <p className="text-[10px] text-muted-foreground">1,240 records • Validated</p>
+                      <p className="text-sm font-bold truncate text-primary">PR_JAN_2024_CONSOLIDATED.csv</p>
+                      <p className="text-[10px] text-muted-foreground font-bold">1,240 RECORDS • STATUTORY READY</p>
                     </div>
                     <Button 
-                      variant="ghost" 
+                      variant="default" 
                       size="sm" 
-                      className="text-xs text-primary h-8 gap-2 font-bold hover:bg-primary/10"
+                      className="text-[10px] font-bold uppercase tracking-widest h-9 px-4 rounded-none bg-accent hover:bg-accent/90 shadow-md disabled:opacity-50"
                       onClick={handleExecuteMatch}
                       disabled={isProcessing}
                     >
-                      {!isProcessing && <Zap className="h-3 w-3" />}
-                      {isProcessing ? "Reconciling..." : "Run Engine"}
+                      {!isProcessing && <Zap className="h-3.5 w-3.5 mr-2" />}
+                      {isProcessing ? "Processing..." : "Run Engine"}
                     </Button>
                  </div>
 
-                 <div className="flex items-center gap-3 p-3 rounded-md bg-muted/10 border border-white/5 opacity-60">
-                    <div className="h-8 w-8 rounded bg-muted/50 flex items-center justify-center shrink-0">
-                      <FileText className="h-4 w-4 text-muted-foreground/50" />
+                 <div className="flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 opacity-50 grayscale">
+                    <div className="h-10 w-10 rounded bg-white/50 border border-slate-200 flex items-center justify-center shrink-0">
+                      <FileText className="h-5 w-5 text-slate-300" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">GSTR_2B_JAN_PORTAL.xlsx</p>
-                      <p className="text-[10px] text-muted-foreground">Awaiting dependency: PR_JAN</p>
+                      <p className="text-sm font-bold truncate">GSTR_2B_JAN_PORTAL.xlsx</p>
+                      <p className="text-[10px] text-muted-foreground font-bold">AWAITING DEPENDENCY: PR_JAN</p>
                     </div>
-                    <Badge variant="outline" className="text-[9px] uppercase">Queued</Badge>
+                    <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-widest rounded-none">QUEUED</Badge>
                  </div>
               </div>
             </CardContent>
           </Card>
 
-          <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 flex gap-4 shadow-inner">
-             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <AlertCircle className="h-5 w-5 text-primary" />
+          <div className="p-6 bg-slate-100 border border-slate-200 flex gap-4 shadow-inner">
+             <div className="h-12 w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
+                <AlertCircle className="h-6 w-6 text-primary" />
              </div>
              <div className="space-y-1">
-               <p className="text-sm font-bold text-primary">Intelligent Normalization</p>
-               <p className="text-xs text-muted-foreground leading-relaxed">
-                 Our adapter layer automatically maps inconsistent column headers (e.g., 'Inv No' vs 'Invoice_ID') using a pre-trained semantic header transformer.
+               <p className="text-sm font-bold text-primary uppercase tracking-wider">Semantic Header Mapping</p>
+               <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                 The ingestion adapter automatically maps inconsistent column headers using a pre-trained semantic transformer, ensuring ERP-to-Portal compatibility without manual intervention.
                </p>
              </div>
           </div>

@@ -37,7 +37,7 @@
 }
 
 .aadhaar-card {
-  @apply bg-white border border-border shadow-sm relative overflow-hidden;
+  @apply bg-white border border-border shadow-sm relative overflow-hidden transition-all hover:shadow-md;
   border-top: 4px solid hsl(var(--accent));
 }
 
@@ -51,4 +51,8 @@
 
 .nav-item {
   @apply px-4 py-3 text-sm font-medium hover:bg-white/10 flex items-center gap-1 cursor-pointer transition-colors;
+}
+
+.status-badge {
+  @apply rounded-none text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border;
 }

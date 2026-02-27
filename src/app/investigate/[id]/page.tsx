@@ -1,4 +1,6 @@
+'use client';
 
+import { useParams } from 'next/navigation';
 import { MOCK_INVOICES, MOCK_RISK_ASSESSMENTS, MOCK_VENDORS } from '@/app/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,149 +15,169 @@ import {
   ShieldCheck,
   GitBranch,
   Search,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Clock,
+  Printer
 } from 'lucide-react';
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 
-interface InvestigationPageProps {
-  params: Promise<{ id: string }>;
-}
+export default function InvestigationPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [explanation, setExplanation] = useState<string>("Analyzing graph evidence...");
+  const [mounted, setMounted] = useState(false);
 
-/**
- * SSD Section 5: Investigation Module
- * Implements Relationship validation & tax chain evidence traversal.
- */
-export default async function InvestigationPage({ params }: InvestigationPageProps) {
-  const { id } = await params;
   const invoice = MOCK_INVOICES.find(i => i.id === id) || MOCK_INVOICES[0];
   const assessment = MOCK_RISK_ASSESSMENTS.find(a => a.vendorGstin === invoice.vendorGstin) || MOCK_RISK_ASSESSMENTS[0];
   const vendor = MOCK_VENDORS.find(v => v.gstin === invoice.vendorGstin);
 
-  // SSD Contract 4: Triggering Explainability Layer with Graph Evidence
-  const aiExplanation = await explainInvoiceFlag({
-    invoiceId: invoice.id,
-    status: invoice.status,
-    riskScore: invoice.riskScore,
-    factors: [...(invoice.flags || []), ...(assessment.contributingFactors || [])]
-  });
+  useEffect(() => {
+    setMounted(true);
+    async function getExplanation() {
+      try {
+        const res = await explainInvoiceFlag({
+          invoiceId: invoice.id,
+          status: invoice.status,
+          riskScore: invoice.riskScore,
+          factors: [...(invoice.flags || []), ...(assessment.contributingFactors || [])]
+        });
+        setExplanation(res.explanation);
+      } catch (err) {
+        setExplanation("Error generating AI analysis. Please review manual flags below.");
+      }
+    }
+    getExplanation();
+  }, [invoice, assessment]);
+
+  if (!mounted) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div className="flex items-center gap-4">
           <Link href="/investigate">
-            <div className="p-2 hover:bg-muted rounded-full transition-colors cursor-pointer">
-              <ArrowLeft className="h-5 w-5" />
-            </div>
+            <Button variant="ghost" size="icon" className="hover:bg-slate-100 rounded-none border border-slate-200 bg-white shadow-sm">
+              <ArrowLeft className="h-5 w-5 text-primary" />
+            </Button>
           </Link>
           <div className="flex flex-col">
-            <h1 className="font-headline text-3xl font-bold tracking-tight">
-              Case Analysis: {invoice.id}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Case Analysis Node</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+            </div>
+            <h1 className="font-headline text-3xl font-extrabold tracking-tight text-primary">
+              ID: {invoice.id}
             </h1>
-            <p className="text-muted-foreground">Pramāṇa Engine: Deterministic graph traversal & relationship validation.</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Badge variant="outline" className="border-primary/20 text-primary uppercase font-bold tracking-widest text-[10px] px-3">
-            Priority: {invoice.riskScore > 80 ? 'CRITICAL' : 'HIGH'}
-          </Badge>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="h-9 rounded-none text-[10px] font-bold uppercase tracking-widest border-primary/20 bg-white" onClick={() => window.print()}>
+            <Printer className="h-4 w-4 mr-2" /> Print Dossier
+          </Button>
           <Badge variant="secondary" className={cn(
-            "uppercase font-bold tracking-widest text-[10px] px-3",
-            invoice.status === 'FLAGGED' ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-secondary/10 text-secondary border-secondary/20"
+            "rounded-none uppercase font-bold tracking-widest text-[10px] px-4 py-1.5 border shadow-sm",
+            invoice.status === 'FLAGGED' ? "bg-destructive/5 text-destructive border-destructive/20" : "bg-accent/5 text-accent border-accent/20"
           )}>
-            {invoice.status}
+            STATUS: {invoice.status}
           </Badge>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-8">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-muted/20">
-              <TabsTrigger value="overview">Evidence</TabsTrigger>
-              <TabsTrigger value="schema">Graph Context</TabsTrigger>
-              <TabsTrigger value="audit">Audit Log</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-none h-12 p-1 border border-slate-200 shadow-inner">
+              <TabsTrigger value="overview" className="rounded-none font-bold uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">Statutory Evidence</TabsTrigger>
+              <TabsTrigger value="schema" className="rounded-none font-bold uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">Graph Context</TabsTrigger>
+              <TabsTrigger value="audit" className="rounded-none font-bold uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md">Filing Trail</TabsTrigger>
             </TabsList>
             
             <TabsContent value="overview" className="mt-6 space-y-6">
-              <Card className="bg-card/50 border">
-                <CardHeader className="border-b bg-muted/20">
-                  <CardTitle className="text-lg font-medium flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    Pramāṇa (Proof-Based) Evidence
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 grid grid-cols-2 gap-8 md:grid-cols-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <Hash className="h-3 w-3" /> IRN Node
+              <div className="bg-white border shadow-sm overflow-hidden border-t-4 border-t-accent">
+                <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                    <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+                    Pramāṇa (Proof-Based) Evidence Log
+                  </h3>
+                  <span className="text-[10px] font-mono font-bold text-slate-400">HASH: 8f2b...9a1</span>
+                </div>
+                <div className="p-8 grid grid-cols-2 gap-8 md:grid-cols-4">
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
+                      <Hash className="h-3 w-3" /> IRN NODE
                     </p>
-                    <Badge variant="outline" className={cn(
-                      "text-[10px]",
-                      invoice.einvoiceStatus === 'Generated' ? "text-secondary border-secondary/20" : "text-destructive border-destructive/20"
+                    <div className={cn(
+                      "font-bold text-sm border-l-2 pl-3",
+                      invoice.einvoiceStatus === 'Generated' ? "text-accent border-accent" : "text-destructive border-destructive"
                     )}>
-                      {invoice.einvoiceStatus || 'Missing'}
-                    </Badge>
+                      {invoice.einvoiceStatus || 'MISSING'}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <GitBranch className="h-3 w-3" /> Traversal Depth
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
+                      <GitBranch className="h-3 w-3" /> TRAVERSAL
                     </p>
-                    <p className="text-sm font-medium">{vendor?.networkMetrics?.chainDepth || 0} Layers</p>
+                    <div className="font-bold text-sm border-l-2 border-slate-300 pl-3">
+                      {vendor?.networkMetrics?.chainDepth || 0} LAYERS
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <IndianRupee className="h-3 w-3" /> Tax Value
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
+                      <IndianRupee className="h-3 w-3" /> TAX VALUE
                     </p>
-                    <p className="text-sm font-medium">₹{invoice.totalAmount.toLocaleString()}</p>
+                    <div className="font-bold text-sm border-l-2 border-slate-300 pl-3">
+                      ₹{invoice.totalAmount.toLocaleString()}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
-                      <Zap className="h-3 w-3" /> Risk Score
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
+                      <Zap className="h-3 w-3" /> RISK INDEX
                     </p>
-                    <p className={cn(
-                      "text-sm font-bold",
-                      invoice.riskScore > 70 ? "text-destructive" : "text-amber-500"
-                    )}>{invoice.riskScore}/100</p>
+                    <div className={cn(
+                      "font-bold text-sm border-l-2 pl-3",
+                      invoice.riskScore > 70 ? "text-destructive border-destructive" : "text-amber-500 border-amber-500"
+                    )}>{invoice.riskScore}/100</div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <Card className="bg-card/50 border">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Network Coverage</CardTitle>
+                <Card className="rounded-none border shadow-sm bg-white border-t-4 border-t-primary">
+                  <CardHeader className="py-3 px-6 border-b border-slate-50 bg-slate-50/50">
+                    <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Network Coverage Analysis</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Traversal Key</span>
-                        <Badge variant="outline" className="text-secondary border-secondary/20 font-mono text-[10px]">VERIFIED</Badge>
+                  <CardContent className="p-6 space-y-4">
+                     <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-bold uppercase tracking-tighter">Traversal Key</span>
+                        <Badge variant="outline" className="text-accent border-accent/20 font-bold text-[9px] rounded-none">STATUTORY_VERIFIED</Badge>
                      </div>
-                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Payment Coverage</span>
+                     <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-bold uppercase tracking-tighter">Tax Remittance Ratio</span>
                         <span className={cn(
-                          "font-mono",
-                          (invoice.paymentCoverageRatio || 0) < 1.0 ? "text-destructive" : "text-secondary"
+                          "font-mono font-bold",
+                          (invoice.paymentCoverageRatio || 0) < 1.0 ? "text-destructive" : "text-accent"
                         )}>{(invoice.paymentCoverageRatio || 0) * 100}%</span>
                      </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-card/50 border">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Entity Integrity</CardTitle>
+                <Card className="rounded-none border shadow-sm bg-white border-t-4 border-t-primary">
+                  <CardHeader className="py-3 px-6 border-b border-slate-50 bg-slate-50/50">
+                    <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Entity Integrity Metrics</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Cluster Risk</span>
-                        <span className="font-mono text-destructive">{(vendor?.networkMetrics?.clusterRisk || 0) * 100}%</span>
+                  <CardContent className="p-6 space-y-4">
+                     <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-bold uppercase tracking-tighter">Cluster Risk Score</span>
+                        <span className="font-mono font-bold text-destructive">{(vendor?.networkMetrics?.clusterRisk || 0) * 100}%</span>
                      </div>
-                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Registration Type</span>
-                        <span className="font-mono">{vendor?.registrationType || 'Regular'}</span>
+                     <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-bold uppercase tracking-tighter">Registration Category</span>
+                        <span className="font-bold text-primary">{vendor?.registrationType || 'REGULAR'}</span>
                      </div>
                   </CardContent>
                 </Card>
@@ -163,84 +185,128 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
             </TabsContent>
 
             <TabsContent value="schema" className="mt-6">
-              <Card className="bg-card/50 border p-6">
-                <h3 className="text-lg font-bold mb-4">SSD Section 10: Graph Schema Mapping</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                    <span className="text-xs font-bold text-muted-foreground">TAXPAYER_GSTIN</span>
-                    <span className="text-sm font-mono">{invoice.vendorGstin}</span>
+              <div className="bg-white border shadow-sm p-8 space-y-8 border-t-4 border-t-slate-800">
+                <div className="flex items-center gap-2 border-b pb-4">
+                  <Database className="h-5 w-5 text-slate-800" />
+                  <h3 className="text-lg font-bold text-primary">Knowledge Graph Mapping (SSD-10)</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                     <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source Entity Node</p>
+                        <p className="font-mono text-xs font-bold bg-slate-50 p-2 border border-slate-100">{invoice.vendorGstin}</p>
+                     </div>
+                     <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Target Invoice Node</p>
+                        <p className="font-mono text-xs font-bold bg-slate-50 p-2 border border-slate-100">{invoice.id}</p>
+                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                    <span className="text-xs font-bold text-muted-foreground">INVOICE_NODE</span>
-                    <span className="text-sm font-mono">{invoice.invoiceNumber}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <span className="text-xs font-bold text-muted-foreground">RELATIONSHIP_PATH</span>
-                    <span className="text-sm font-mono italic">ISSUED {"->"} HAS_IRN {"->"} REPORTED_IN</span>
+                  <div className="space-y-1 bg-slate-800 p-6 text-white/90 font-mono text-xs leading-relaxed border-l-4 border-l-accent shadow-inner">
+                    <p className="mb-2 text-accent font-bold uppercase text-[9px]">Traversal Query Output:</p>
+                    MATCH (v:Vendor {"{gstin: '${invoice.vendorGstin}'}"})<br/>
+                    -[:ISSUED]->(i:Invoice {"{id: '${invoice.id}'}"})<br/>
+                    -[:HAS_IRN]->(n:IRN)<br/>
+                    -[:REPORTED_IN]->(r:Return)<br/>
+                    RETURN v, i, n, r
                   </div>
                 </div>
-              </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="audit" className="mt-6">
-              <Card className="bg-card/50 border p-6">
-                 <div className="space-y-4">
-                    <div className="flex gap-4">
-                       <GitBranch className="h-5 w-5 text-primary" />
-                       <div>
-                          <p className="text-sm font-bold">Path: ISSUED {"->"} PAID_TAX Break</p>
-                          <p className="text-xs text-muted-foreground">Traversal halted at Return JAN-2024: Payment node missing for supplier GSTIN.</p>
+              <div className="bg-white border shadow-sm p-8 space-y-6 border-t-4 border-t-slate-800">
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-6">Filing Chain Verification Dossier</h3>
+                 <div className="space-y-6">
+                    <div className="flex gap-6 items-start">
+                       <div className="h-10 w-10 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                          <GitBranch className="h-5 w-5 text-primary" />
+                       </div>
+                       <div className="flex-1 pb-6 border-b border-slate-100">
+                          <p className="text-sm font-extrabold text-primary mb-1">Path Analysis: ISSUED {"->"} PAID_TAX Break</p>
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium italic">"Deterministic traversal halted at Return Node JAN-2024: Tax payment relationship node missing for upstream supplier entity."</p>
                        </div>
                     </div>
-                    <div className="flex gap-4">
-                       <AlertTriangle className="h-5 w-5 text-destructive" />
-                       <div>
-                          <p className="text-sm font-bold">Anomaly: IRN Cancelled Post-Observation</p>
-                          <p className="text-xs text-muted-foreground">IRN node updated to status: CANCELLED on 2024-02-01. Mismatch detected.</p>
+                    <div className="flex gap-6 items-start">
+                       <div className="h-10 w-10 rounded-full bg-destructive/5 border border-destructive/10 flex items-center justify-center shrink-0">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                       </div>
+                       <div className="flex-1 pb-6 border-b border-slate-100">
+                          <p className="text-sm font-extrabold text-destructive mb-1">Anomaly: IRN Status Mismatch Detection</p>
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium italic">"IRN Node state updated to status: CANCELLED on 2024-02-01. Mismatch detected against active recipient ITC claim."</p>
+                       </div>
+                    </div>
+                    <div className="flex gap-6 items-start">
+                       <div className="h-10 w-10 rounded-full bg-accent/5 border border-accent/10 flex items-center justify-center shrink-0">
+                          <Clock className="h-5 w-5 text-accent" />
+                       </div>
+                       <div className="flex-1">
+                          <p className="text-sm font-extrabold text-accent mb-1">Audit Generation Timestamp</p>
+                          <p className="text-xs text-slate-600 font-mono font-bold">{new Date().toISOString()}</p>
                        </div>
                     </div>
                  </div>
-              </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
 
-        <div className="space-y-6">
-          <Card className="bg-card/50 border border-primary/20 shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <Search className="h-4 w-4 text-primary" />
-                Explainability Layer
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 relative">
-                <Zap className="absolute top-2 right-2 h-4 w-4 text-primary opacity-20" />
-                <p className="text-sm leading-relaxed italic text-foreground/90">
-                  "{aiExplanation.explanation}"
+        <div className="space-y-8">
+          <div className="bg-white border-2 border-primary/10 shadow-xl overflow-hidden rounded-none">
+            <div className="bg-primary text-white p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-accent" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Explainability Layer</span>
+              </div>
+              <Badge className="bg-white text-primary text-[8px] font-black tracking-widest rounded-none">ACTIVE</Badge>
+            </div>
+            <CardContent className="p-8 space-y-6">
+              <div className="p-6 bg-slate-50 border-l-4 border-l-primary relative shadow-inner">
+                <FileText className="absolute top-2 right-2 h-4 w-4 text-primary/10" />
+                <p className="text-sm leading-relaxed italic text-slate-800 font-medium">
+                  "{explanation}"
                 </p>
               </div>
-              <div className="pt-4 border-t border-white/5">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-3">Mismatch Logic</p>
-                <div className="space-y-2">
+              <div className="pt-6 border-t border-slate-100">
+                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mb-4">Mismatch Reasoning Logic</p>
+                <div className="space-y-3">
                   {invoice.flags?.map((flag, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs">
-                      <div className="h-1.5 w-1.5 rounded-full bg-destructive" />
-                      <span>{flag.replace(/_/g, ' ')}</span>
+                    <div key={idx} className="flex items-center gap-3 p-2 bg-destructive/5 border border-destructive/10 group hover:bg-destructive/10 transition-all">
+                      <div className="h-1.5 w-1.5 rounded-full bg-destructive animate-pulse" />
+                      <span className="text-[10px] font-bold text-destructive uppercase tracking-wide">{flag.replace(/_/g, ' ')}</span>
                     </div>
                   ))}
+                  {(!invoice.flags || invoice.flags.length === 0) && (
+                    <p className="text-xs italic text-slate-400">No rule-based anomalies detected.</p>
+                  )}
                 </div>
               </div>
+              <Button className="w-full bg-primary text-white font-bold text-[10px] uppercase tracking-widest h-10 rounded-none shadow-md mt-4">
+                Escalate to Zonal Office
+              </Button>
             </CardContent>
-          </Card>
+          </div>
 
-          <Alert className="bg-destructive/5 border-destructive/20">
-            <ShieldAlert className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-destructive font-bold">Critical Chain Alert</AlertTitle>
-            <AlertDescription className="text-xs">
-              This invoice is part of a "Circular Trading Cluster" (FRAUD-RING-72). Tax flows are looping back to primary entity without value addition.
+          <Alert className="bg-destructive/5 border-destructive/20 border-l-4 border-l-destructive rounded-none shadow-sm">
+            <ShieldAlert className="h-5 w-5 text-destructive" />
+            <AlertTitle className="text-destructive font-bold uppercase text-[10px] tracking-widest mb-2">Critical Chain Alert</AlertTitle>
+            <AlertDescription className="text-xs text-slate-700 leading-relaxed font-medium">
+              This entity is part of a "Circular Trading Cluster" (FRAUD-RING-72). Relationship traversal identifies looping credit flows without statutory substance.
             </AlertDescription>
           </Alert>
+          
+          <div className="p-6 bg-accent/5 border border-accent/20 rounded-none shadow-sm">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-accent mb-3">Statutory Linkage</h4>
+            <div className="space-y-4">
+               <div className="flex justify-between items-center text-xs">
+                 <span className="text-slate-500 font-bold">Rule 86B Impact</span>
+                 <Badge variant="outline" className="text-destructive border-destructive/20 rounded-none text-[9px] font-black uppercase">RESTRICTED</Badge>
+               </div>
+               <div className="flex justify-between items-center text-xs">
+                 <span className="text-slate-500 font-bold">Compliance Rank</span>
+                 <span className="font-mono font-bold text-slate-700">#C22-RANK-LOW</span>
+               </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

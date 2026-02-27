@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -15,148 +14,164 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, ShieldAlert, ArrowRight, Activity } from 'lucide-react';
+import { Search, Filter, ShieldAlert, ArrowRight, Activity, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export default function InvestigationsListPage() {
   const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
   const filteredInvoices = useMemo(() => {
     return MOCK_INVOICES.filter(inv => {
       const vendor = MOCK_VENDORS.find(v => v.gstin === inv.vendorGstin);
       const searchStr = `${inv.id} ${inv.invoiceNumber} ${vendor?.name || ''} ${inv.vendorGstin}`.toLowerCase();
-      return searchStr.includes(search.toLowerCase());
+      const matchesSearch = searchStr.includes(search.toLowerCase());
+      const matchesStatus = filterStatus ? inv.status === filterStatus : true;
+      return matchesSearch && matchesStatus;
     });
-  }, [search]);
+  }, [search, filterStatus]);
 
   const stats = useMemo(() => {
     const flagged = MOCK_INVOICES.filter(i => i.status === 'FLAGGED').length;
     const critical = MOCK_INVOICES.filter(i => i.riskScore > 85).length;
-    return { flagged, critical };
+    const matchedCount = MOCK_INVOICES.filter(i => i.status === 'MATCHED').length;
+    return { flagged, critical, matchedCount };
   }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-headline text-3xl font-bold tracking-tight">Case Management</h1>
-        <p className="text-muted-foreground">Active investigations and flagged transaction review using Pramāṇa intelligence.</p>
+      <div className="flex flex-col gap-1 border-b border-slate-200 pb-6">
+        <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">Case Management Center</h1>
+        <p className="text-muted-foreground font-medium">Active investigations and flagged transaction review using Pramāṇa intelligence.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="bg-card/50 border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Flagged Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-destructive">{stats.flagged}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Pending manual verification</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/50 border border-primary/20 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-primary">Critical Cases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{stats.critical}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Score &gt; 85/100</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/50 border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-secondary">Matched Batch</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-secondary">
-              {MOCK_INVOICES.filter(i => i.status === 'MATCHED').length}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Deterministic reconciliation</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white border p-6 shadow-sm border-t-4 border-t-destructive">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Flagged for Review</p>
+          <div className="flex items-end gap-3">
+            <span className="text-4xl font-black text-destructive">{stats.flagged}</span>
+            <span className="text-[10px] text-muted-foreground font-bold mb-1.5">CASES PENDING</span>
+          </div>
+        </div>
+        <div className="bg-white border p-6 shadow-sm border-t-4 border-t-primary">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Critical Priority</p>
+          <div className="flex items-end gap-3">
+            <span className="text-4xl font-black text-primary">{stats.critical}</span>
+            <span className="text-[10px] text-muted-foreground font-bold mb-1.5">SCORE > 85</span>
+          </div>
+        </div>
+        <div className="bg-white border p-6 shadow-sm border-t-4 border-t-accent">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Matched (Verified)</p>
+          <div className="flex items-end gap-3">
+            <span className="text-4xl font-black text-accent">{stats.matchedCount}</span>
+            <span className="text-[10px] text-muted-foreground font-bold mb-1.5">AUTO-RESOLVED</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-4 border shadow-inner">
+        <div className="relative flex-1 w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Search Invoice, GSTIN, or Vendor..." 
-            className="pl-8 bg-card/50" 
+            placeholder="Search Case, GSTIN, or Vendor..." 
+            className="pl-9 bg-white border-border rounded-none shadow-sm h-10" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" /> Filter Status
-        </Button>
+        <div className="flex items-center gap-2">
+           <Button 
+            variant={filterStatus === null ? "default" : "outline"} 
+            className="h-10 text-[10px] font-bold uppercase tracking-widest rounded-none"
+            onClick={() => setFilterStatus(null)}
+           >
+            All
+           </Button>
+           <Button 
+            variant={filterStatus === 'FLAGGED' ? "default" : "outline"} 
+            className="h-10 text-[10px] font-bold uppercase tracking-widest rounded-none border-destructive/20 text-destructive hover:bg-destructive hover:text-white"
+            onClick={() => setFilterStatus('FLAGGED')}
+           >
+            Flagged
+           </Button>
+           <Button 
+            variant={filterStatus === 'MATCHED' ? "default" : "outline"} 
+            className="h-10 text-[10px] font-bold uppercase tracking-widest rounded-none border-accent/20 text-accent hover:bg-accent hover:text-white"
+            onClick={() => setFilterStatus('MATCHED')}
+           >
+            Matched
+           </Button>
+        </div>
       </div>
 
-      <Card className="bg-card/50 border overflow-hidden">
+      <Card className="rounded-none border shadow-sm overflow-hidden bg-white">
         <Table>
-          <TableHeader className="bg-muted/10">
+          <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead className="w-[150px]">Invoice ID</TableHead>
-              <TableHead>Vendor</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-center">Risk</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="w-[150px] font-bold text-primary uppercase text-[10px] tracking-widest py-4">Invoice ID</TableHead>
+              <TableHead className="font-bold text-primary uppercase text-[10px] tracking-widest">Vendor Context</TableHead>
+              <TableHead className="font-bold text-primary uppercase text-[10px] tracking-widest">Filing Date</TableHead>
+              <TableHead className="text-right font-bold text-primary uppercase text-[10px] tracking-widest">Statutory Value</TableHead>
+              <TableHead className="text-center font-bold text-primary uppercase text-[10px] tracking-widest">Risk Index</TableHead>
+              <TableHead className="font-bold text-primary uppercase text-[10px] tracking-widest">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredInvoices.map((invoice) => {
               const vendor = MOCK_VENDORS.find(v => v.gstin === invoice.vendorGstin);
               return (
-                <TableRow key={invoice.id} className="hover:bg-muted/5 group">
-                  <TableCell className="font-mono text-xs">{invoice.id}</TableCell>
+                <TableRow key={invoice.id} className="hover:bg-slate-50 group border-b">
+                  <TableCell className="font-mono text-xs font-bold text-slate-700">{invoice.id}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">{vendor?.name || 'Unknown'}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono">{invoice.vendorGstin}</span>
+                      <span className="text-sm font-bold text-primary">{vendor?.name || 'Unknown Entity'}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono font-bold">{invoice.vendorGstin}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs">
-                    {invoice.invoiceDate.toLocaleDateString()}
+                  <TableCell className="text-xs font-medium text-slate-600">
+                    {invoice.invoiceDate.toLocaleDateString('en-IN', { dateStyle: 'medium' })}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-bold font-mono">
                     ₹{invoice.totalAmount.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant="outline" className={cn(
-                      "text-[10px]",
-                      invoice.riskScore > 80 ? "text-destructive border-destructive/20" : 
-                      invoice.riskScore > 50 ? "text-amber-500 border-amber-500/20" : "text-secondary border-secondary/20"
+                    <div className={cn(
+                      "inline-flex items-center justify-center h-8 w-8 border font-bold text-xs",
+                      invoice.riskScore > 80 ? "bg-destructive/10 text-destructive border-destructive/20" : 
+                      invoice.riskScore > 50 ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-accent/10 text-accent border-accent/20"
                     )}>
                       {invoice.riskScore}
-                    </Badge>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge className={cn(
-                      "text-[10px] font-bold uppercase",
-                      invoice.status === 'FLAGGED' ? "bg-destructive/10 text-destructive border-destructive/20" :
-                      invoice.status === 'MATCHED' ? "bg-secondary/10 text-secondary border-secondary/20" :
-                      "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                    )}>
-                      {invoice.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right pr-6">
                     <Link href={`/investigate/${invoice.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                        Investigate <ArrowRight className="h-3 w-3" />
+                      <Button variant="outline" size="sm" className="h-8 gap-2 text-[10px] font-bold uppercase tracking-widest rounded-none border-primary/20 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                        Solve Case <ArrowRight className="h-3 w-3" />
                       </Button>
                     </Link>
                   </TableCell>
                 </TableRow>
               );
             })}
+            {filteredInvoices.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-24 text-center text-muted-foreground italic font-medium uppercase text-[10px] tracking-widest">
+                  No cases found matching criteria.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </Card>
       
-      <p className="text-center text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold pb-8">
-        Pramāṇa System Node Status: Online • {filteredInvoices.length} Records Loaded
-      </p>
+      <div className="flex items-center justify-center gap-6 py-6 opacity-40 grayscale pointer-events-none">
+        <FileText className="h-8 w-8" />
+        <Activity className="h-8 w-8" />
+        <ShieldAlert className="h-8 w-8" />
+        <div className="h-px flex-1 bg-slate-300" />
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em]">System Monitoring Hub: ACTIVE</span>
+      </div>
     </div>
   );
 }
