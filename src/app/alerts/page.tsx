@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertSeverity } from '@/domain/models/analytics';
-import { Bell, ShieldAlert, Info, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
+import { Bell, ShieldAlert, Info, AlertTriangle, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,27 +20,27 @@ export default function AlertCenterPage() {
       {
         id: 'ALR-001',
         title: 'Critical ITC Chain Break',
-        description: 'Suspicious mismatch detected in upstream tax payment for Vendor ZEN-91.',
+        description: 'Suspicious mismatch detected in upstream tax payment for Vendor ZEN-91 (Zenith Marketing).',
         timestamp: new Date(),
         severity: 'CRITICAL',
         source: 'RISK_AI',
         isRead: false,
-        link: '/audit/FRAUD-RING-91'
+        link: '/investigate/INV-2024-003'
       },
       {
         id: 'ALR-002',
         title: 'High Network Risk Cluster',
-        description: 'Fraud ring engine identified a high-degree community formation in Sector 4.',
+        description: 'Fraud ring engine identified a high-degree circular trading loop in the Shell Network.',
         timestamp: new Date(Date.now() - 3600000),
         severity: 'WARNING',
         source: 'FRAUD_ENGINE',
         isRead: false,
-        link: '/audit/FRAUD-RING-72'
+        link: '/investigate/INV-LOOP-001'
       },
       {
         id: 'ALR-003',
         title: 'Batch Matching Complete',
-        description: 'PR_JAN_2024 has been successfully reconciled against GSTR-2B.',
+        description: 'PR_JAN_2024 has been successfully reconciled against GSTR-2B. View health summary.',
         timestamp: new Date(Date.now() - 7200000),
         severity: 'INFO',
         source: 'RECON',
@@ -102,7 +102,7 @@ export default function AlertCenterPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-end gap-2 shrink-0">
                    <Badge className={cn(
                      "text-[10px] font-bold uppercase",
                      alert.severity === 'CRITICAL' ? "bg-destructive text-destructive-foreground" :
@@ -112,7 +112,9 @@ export default function AlertCenterPage() {
                    </Badge>
                    {alert.link && (
                      <Link href={alert.link}>
-                       <Button variant="ghost" size="sm" className="text-xs h-7">Investigate Case</Button>
+                       <Button variant="secondary" size="sm" className="text-xs h-8 gap-2">
+                         Solve Case <ArrowRight className="h-3 w-3" />
+                       </Button>
                      </Link>
                    )}
                 </div>
