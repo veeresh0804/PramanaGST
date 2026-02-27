@@ -27,31 +27,27 @@ export default function UploadPage() {
     setIsProcessing(true);
     setProgress(0);
     
-    let stepIndex = 0;
+    let localProgress = 0;
     const totalSteps = steps.length;
     
     const interval = setInterval(() => {
-      setProgress(prev => {
-        const nextProgress = prev + 4;
-        
-        // Update current descriptive step
-        const currentStepIdx = Math.floor((nextProgress / 100) * totalSteps);
-        if (currentStepIdx < totalSteps) {
-           setCurrentStep(steps[currentStepIdx]);
-        }
-
-        if (nextProgress >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
-          setCurrentStep(null);
-          toast({
-            title: "Matching Engine Complete",
-            description: "Successfully processed 1,240 records. 12 risk flags raised.",
-          });
-          return 100;
-        }
-        return nextProgress;
-      });
+      localProgress += 4;
+      
+      if (localProgress >= 100) {
+        clearInterval(interval);
+        // Important: Update states outside of any functional logic to avoid side-effect warnings
+        setProgress(100);
+        setIsProcessing(false);
+        setCurrentStep(null);
+        toast({
+          title: "Matching Engine Complete",
+          description: "Successfully processed 1,240 records. 12 risk flags raised.",
+        });
+      } else {
+        setProgress(localProgress);
+        const currentStepIdx = Math.floor((localProgress / 100) * totalSteps);
+        setCurrentStep(steps[Math.min(currentStepIdx, totalSteps - 1)]);
+      }
     }, 150);
   };
 
