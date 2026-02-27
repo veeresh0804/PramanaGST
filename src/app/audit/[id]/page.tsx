@@ -33,16 +33,28 @@ export default function AuditReportPage() {
     let title = "Statutory Evidence Log";
     let invoices = [];
     let totalMismatch = 0;
+    let issues = [
+      { code: 'ERR-401', title: 'Chain Break', desc: 'Upstream vendor payment node missing in GSTR-3B filings.' },
+      { code: 'ERR-702', title: 'Circular Loop', desc: 'Transaction path returns to Originating Entity without value addition.' }
+    ];
 
     // Specific logic for mock fraud clusters
     if (id === 'FRAUD-RING-72') {
       invoices = MOCK_INVOICES.filter(inv => inv.id.startsWith('INV-LOOP'));
       title = `Fraud Cluster Audit: Shell Network Alpha-Epsilon`;
       totalMismatch = 180000;
+      issues = [
+        { code: 'ERR-702', title: 'Circular Trading Loop', desc: 'Multi-node network identified where tax credits are cycling without commercial substance.' },
+        { code: 'ERR-905', title: 'High-Velocity Trading', desc: 'Transaction volume exceeds reported operational capacity of involved shell nodes.' }
+      ];
     } else if (id === 'FRAUD-RING-91') {
       invoices = MOCK_INVOICES.filter(inv => inv.id === 'INV-2024-003');
       title = `Fraud Cluster Audit: Zenith Cluster Analysis`;
       totalMismatch = 36000;
+      issues = [
+        { code: 'ERR-401', title: 'ITC Chain Break', desc: 'Direct upstream supplier (Zenith) has failed to remit tax liability for the reported period.' },
+        { code: 'ERR-302', title: 'GSTR-2B Mismatch', desc: 'Recipient claiming ITC on invoices not present in the portal-generated 2B dataset.' }
+      ];
     } else {
       // Logic for single invoice audit
       const inv = MOCK_INVOICES.find(i => i.id === id);
@@ -50,12 +62,20 @@ export default function AuditReportPage() {
         invoices = [inv];
         title = `Transaction Audit: ${inv.id}`;
         totalMismatch = inv.riskScore > 70 ? inv.totalAmount * 0.18 : 0;
+        
+        if (inv.flags && inv.flags.length > 0) {
+          issues = inv.flags.map((f, idx) => ({
+            code: `ERR-V${100 + idx}`,
+            title: f.replace(/_/g, ' '),
+            desc: 'Specific risk marker triggered by graph relationship traversal.'
+          }));
+        }
       } else {
         title = "Audit Not Found";
       }
     }
 
-    return { title, invoices, totalMismatch };
+    return { title, invoices, totalMismatch, issues };
   }, [id]);
 
   if (!mounted) return null;
@@ -196,14 +216,13 @@ export default function AuditReportPage() {
               Statutory Non-Compliance Flags
             </h2>
             <div className="grid grid-cols-2 gap-4">
-               <div className="p-4 bg-destructive/5 border border-destructive/10 rounded">
-                  <p className="font-bold text-xs uppercase mb-1">Pramāṇa Error 401</p>
-                  <p className="text-xs text-slate-600 italic">Chain Break: Upstream vendor payment node missing in GSTR-3B filings.</p>
-               </div>
-               <div className="p-4 bg-destructive/5 border border-destructive/10 rounded">
-                  <p className="font-bold text-xs uppercase mb-1">Pramāṇa Error 702</p>
-                  <p className="text-xs text-slate-600 italic">Circular Loop: Transaction path returns to Originating Entity without value addition.</p>
-               </div>
+               {auditData.issues.map((issue, idx) => (
+                 <div key={idx} className="p-4 bg-destructive/5 border border-destructive/10 rounded">
+                    <p className="font-bold text-xs uppercase mb-1">Pramāṇa {issue.code}</p>
+                    <p className="text-sm font-bold text-slate-800 mb-1">{issue.title}</p>
+                    <p className="text-xs text-slate-600 italic">{issue.desc}</p>
+                 </div>
+               ))}
             </div>
           </section>
 
