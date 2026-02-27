@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -36,9 +36,24 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false 
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 500, height: 300 });
 
   useEffect(() => {
     setMounted(true);
+    
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   const kpiData = [
@@ -88,20 +103,22 @@ export default function DashboardPage() {
       SUPPLIER: '#0099CC',
       BUYER: '#1E2A38',
       INVOICE: '#94A3B8',
+      RETURN_PERIOD: '#E2E8F0',
+      IRN: '#CBD5E1',
     };
 
-    const nodes = MOCK_GRAPH_DATA.nodes
-      .filter(n => ['ROOT_NODE', 'SUPPLIER', 'BUYER', 'INVOICE'].includes(n.type))
-      .slice(0, 15)
-      .map(n => ({
-        ...n,
-        color: nodeColors[n.type as keyof typeof nodeColors] || '#CBD5E1'
-      }));
+    const nodes = MOCK_GRAPH_DATA.nodes.map(n => ({
+      ...n,
+      color: nodeColors[n.type as keyof typeof nodeColors] || '#CBD5E1'
+    }));
 
-    const nodeIds = new Set(nodes.map(n => n.id));
-    const links = MOCK_GRAPH_DATA.links.filter(l => nodeIds.has(l.source as string) && nodeIds.has(l.target as string));
-
-    return { nodes, links };
+    return { 
+      nodes, 
+      links: MOCK_GRAPH_DATA.links.map(l => ({
+        ...l,
+        statusColor: l.status === 'RISK' ? '#ef4444' : l.status === 'WARNING' ? '#d97706' : '#CBD5E1'
+      }))
+    };
   }, []);
 
   return (
@@ -152,31 +169,26 @@ export default function DashboardPage() {
               </div>
               <Badge className="bg-primary/5 text-primary border-primary/20 rounded-none text-[8px] h-4">LIVE</Badge>
             </CardHeader>
-            <CardContent className="p-0 h-[300px] flex items-center justify-center bg-slate-50/30">
+            <CardContent className="p-0 h-[300px] flex items-center justify-center bg-slate-50/30 overflow-hidden" ref={containerRef}>
               {mounted ? (
-                <div className="w-full h-full">
+                <div className="w-full h-full pointer-events-none">
                   <ForceGraph2D
                     graphData={previewGraphData}
-                    width={500}
+                    width={dimensions.width}
                     height={300}
-                    nodeRelSize={4}
+                    nodeRelSize={5}
                     linkWidth={1}
-                    linkColor={() => '#CBD5E1'}
+                    linkColor={(link: any) => link.statusColor}
                     nodeCanvasObject={(node: any, ctx, globalScale) => {
-                      const label = node.label;
-                      const fontSize = 10 / globalScale;
                       ctx.beginPath();
-                      ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
+                      ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI, false);
                       ctx.fillStyle = node.color;
                       ctx.fill();
                       
-                      if (globalScale > 2) {
-                        ctx.font = `${fontSize}px Inter`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillStyle = '#64748b';
-                        ctx.fillText(label, node.x, node.y + 8);
-                      }
+                      // Node border
+                      ctx.lineWidth = 1.5 / globalScale;
+                      ctx.strokeStyle = '#ffffff';
+                      ctx.stroke();
                     }}
                     enableNodeDrag={false}
                     enableZoomInteraction={false}
