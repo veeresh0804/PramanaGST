@@ -22,12 +22,9 @@ export const MOCK_INVOICES: Invoice[] = [
   { id: 'INV-2024-005', invoiceNumber: 'VT-993', vendorGstin: '24PLMOK5544N6M7', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-25'), taxableAmount: 150000, cgst: 13500, sgst: 13500, igst: 0, totalAmount: 177000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 76, flags: ['ITC_CHAIN_BROKEN'], irn: 'v55k1...m3', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.5, itcClaimed: 27000 },
 
   // Circular Trading Cluster (Length 3 Loop)
-  // Step 1: Alpha -> Beta (₹1,000,000)
-  { id: 'INV-LOOP-001', invoiceNumber: 'LP-111', vendorGstin: '27LOOPA1111A1Z1', recipientGstin: '27LOOPB2222B2Z2', invoiceDate: new Date('2024-01-01'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP', 'SYMMETRY_DETECTED', 'TAX_GAP_90'], irn: 'lp111...x1', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
-  // Step 2: Beta -> Gamma (₹1,002,000) - Symmetric Value Increase
-  { id: 'INV-LOOP-002', invoiceNumber: 'LP-222', vendorGstin: '27LOOPB2222B2Z2', recipientGstin: '27LOOPC3333C3Z3', invoiceDate: new Date('2024-01-03'), taxableAmount: 1001695, cgst: 90152, sgst: 90152, igst: 0, totalAmount: 1182000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP', 'SHORT_WINDOW_3D'], irn: 'lp222...y2', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.05, itcClaimed: 180304 },
-  // Step 3: Gamma -> Alpha (₹998,000) - Loop closure
-  { id: 'INV-LOOP-003', invoiceNumber: 'LP-333', vendorGstin: '27LOOPC3333C3Z3', recipientGstin: '27LOOPA1111A1Z1', invoiceDate: new Date('2024-01-05'), taxableAmount: 998000, cgst: 89820, sgst: 89820, igst: 0, totalAmount: 1177640, source: 'GSTR_1', status: 'FLAGGED', riskScore: 95, flags: ['CIRCULAR_TRADING_LOOP', 'VALUE_RECIRCULATION'], irn: 'lp333...z3', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 179640 },
+  { id: 'INV-LOOP-001', invoiceNumber: 'LP-111', vendorGstin: '27LOOPA1111A1Z1', recipientGstin: '27LOOPB2222B2Z2', invoiceDate: new Date('2024-01-01'), taxableAmount: 1000000, cgst: 90000, sgst: 90000, igst: 0, totalAmount: 1180000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP', 'SYMMETRY_DETECTED'], irn: 'lp111...x1', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 180000 },
+  { id: 'INV-LOOP-002', invoiceNumber: 'LP-222', vendorGstin: '27LOOPB2222B2Z2', recipientGstin: '27LOOPC3333C3Z3', invoiceDate: new Date('2024-01-03'), taxableAmount: 1001695, cgst: 90152, sgst: 90152, igst: 0, totalAmount: 1182000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 99, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'lp222...y2', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.05, itcClaimed: 180304 },
+  { id: 'INV-LOOP-003', invoiceNumber: 'LP-333', vendorGstin: '27LOOPC3333C3Z3', recipientGstin: '27LOOPA1111A1Z1', invoiceDate: new Date('2024-01-05'), taxableAmount: 998000, cgst: 89820, sgst: 89820, igst: 0, totalAmount: 1177640, source: 'GSTR_1', status: 'FLAGGED', riskScore: 95, flags: ['CIRCULAR_TRADING_LOOP'], irn: 'lp333...z3', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 179640 },
   
   // Risk Injection: Loop Entity -> My Company
   { id: 'INV-LOOP-004', invoiceNumber: 'LP-TO-ROOT', vendorGstin: '27LOOPC3333C3Z3', recipientGstin: MY_COMPANY_GSTIN, invoiceDate: new Date('2024-01-10'), taxableAmount: 500000, cgst: 45000, sgst: 45000, igst: 0, totalAmount: 590000, source: 'GSTR_1', status: 'FLAGGED', riskScore: 90, flags: ['INBOUND_CLUSTER_RISK'], irn: 'lp444...r4', einvoiceStatus: 'Generated', paymentCoverageRatio: 0.0, itcClaimed: 90000 },
@@ -88,10 +85,13 @@ export const MOCK_RISK_ASSESSMENTS: RiskAssessment[] = MOCK_VENDORS.map(v => ({
   vendorGstin: v.gstin,
   riskScore: v.riskScore,
   riskLevel: v.riskLevel,
-  contributingFactors: [
+  contributingFactors: v.riskLevel === 'CRITICAL' ? [
+    'Critical Tax Coverage Gap: Supplier remittance <10% of liability.',
     'Risk-weighted circular pattern detected (Symmetry: 98%)',
-    'Tax Coverage Gap: >90% deficiency in reported remittance',
-    'Short transaction window (<48h) between multi-hop entities'
+    'High network centrality identified (Rotation Hub)'
+  ] : [
+    'Standard compliance checks pending.',
+    'Network centrality within normal operational bounds.'
   ],
   graphEvidence: MOCK_GRAPH_DATA
 }));

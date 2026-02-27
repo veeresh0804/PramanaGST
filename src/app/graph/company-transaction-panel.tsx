@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { X, Building2, IndianRupee, Zap, ShieldCheck, FileText, Calendar, Hash } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Building2, IndianRupee, Zap, ShieldCheck, FileText, Calendar, Hash, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Vendor, Invoice } from '@/domain/models/entities';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,23 @@ export function CompanyTransactionPanel({ vendor, invoices, onClose }: CompanyTr
     ? (invoices.reduce((acc, inv) => acc + (inv.paymentCoverageRatio || 0), 0) / invoices.length) * 100 
     : 0;
 
+  // Derive Rationale based on detection criteria
+  const getRationale = () => {
+    const reasons: string[] = [];
+    if (avgCoverage < 30) {
+      reasons.push("Critical Tax Coverage Gap: Supplier remittance is <30% of reported liability.");
+    }
+    if (invoices.some(inv => inv.flags?.includes('CIRCULAR_TRADING_LOOP'))) {
+      reasons.push("Direct involvement in identified Circular Trading network loop.");
+    }
+    if (vendor.riskScore > 90) {
+      reasons.push("High Network Centrality: Entity acts as a high-velocity rotation hub.");
+    }
+    return reasons;
+  };
+
+  const rationale = getRationale();
+
   return (
     <div className="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl z-[100] border-l-4 border-l-primary flex flex-col animate-in slide-in-from-right duration-300">
       {/* Header */}
@@ -55,6 +72,25 @@ export function CompanyTransactionPanel({ vendor, invoices, onClose }: CompanyTr
 
       <ScrollArea className="flex-1">
         <div className="p-8 space-y-10">
+          
+          {/* Risk Rationale Banner (Conditional) */}
+          {vendor.riskLevel === 'CRITICAL' && (
+            <div className="p-6 bg-destructive/5 border border-destructive/20 rounded-none space-y-3">
+              <div className="flex items-center gap-2 text-destructive">
+                <ShieldAlert className="h-5 w-5" />
+                <span className="text-xs font-black uppercase tracking-widest">Risk Analysis Rationale</span>
+              </div>
+              <ul className="space-y-2">
+                {rationale.map((reason, idx) => (
+                  <li key={idx} className="text-xs text-slate-700 font-bold flex items-start gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-destructive mt-1 shrink-0" />
+                    {reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 bg-slate-50 border border-slate-100 rounded-none space-y-2">
@@ -74,7 +110,10 @@ export function CompanyTransactionPanel({ vendor, invoices, onClose }: CompanyTr
             </div>
             <div className="p-4 bg-slate-50 border border-slate-100 rounded-none space-y-2">
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Compliance</p>
-              <p className="text-xs font-bold text-slate-700">{avgCoverage.toFixed(0)}% COVERAGE</p>
+              <p className={cn(
+                "text-xs font-bold",
+                avgCoverage < 30 ? "text-destructive" : "text-slate-700"
+              )}>{avgCoverage.toFixed(0)}% COVERAGE</p>
             </div>
           </div>
 
