@@ -1,20 +1,51 @@
 
 'use client';
 
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Database, Share2, Search, Info, ZoomIn, ZoomOut, Maximize2, Network, ShieldAlert, Filter } from 'lucide-react';
+import { Database, Share2, Search, Filter, Network, ShieldAlert, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MOCK_GRAPH_DATA } from '../lib/mock-data';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+
+// Dynamic import for react-force-graph as it's client-side only
+const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 export default function KnowledgeGraphPage() {
   const [mounted, setMounted] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   useEffect(() => {
     setMounted(true);
+    const updateDimensions = () => {
+      const container = document.getElementById('graph-container');
+      if (container) {
+        setDimensions({
+          width: container.clientWidth,
+          height: container.clientHeight
+        });
+      }
+    };
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  const graphData = useMemo(() => {
+    return {
+      nodes: MOCK_GRAPH_DATA.nodes.map(n => ({
+        ...n,
+        color: n.riskLevel === 'CRITICAL' ? '#ef4444' : n.riskLevel === 'HIGH' ? '#f59e0b' : '#5AC2FF',
+        val: n.type === 'BUYER' ? 10 : 5
+      })),
+      links: MOCK_GRAPH_DATA.links.map(l => ({
+        source: l.source,
+        target: l.target,
+        label: l.type
+      }))
+    };
   }, []);
 
   if (!mounted) return null;
@@ -38,77 +69,37 @@ export default function KnowledgeGraphPage() {
       </div>
 
       <div className="flex-1 min-h-[600px] grid lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 relative rounded-xl border graph-container overflow-hidden group shadow-2xl">
-          {/* Mock Interactive Graph Visualization */}
-          <div className="absolute inset-0 p-8 flex items-center justify-center">
-             <div className="relative w-full h-full">
-                {/* Connections (SVG) */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                  {/* Lines would normally be rendered from data. Here we mock some key paths. */}
-                  <g className="stroke-white/10" strokeWidth="1">
-                    <line x1="50%" y1="50%" x2="25%" y2="25%" className="animate-pulse" />
-                    <line x1="50%" y1="50%" x2="75%" y2="25%" />
-                    <line x1="50%" y1="50%" x2="25%" y2="75%" strokeDasharray="4" />
-                    <line x1="50%" y1="50%" x2="75%" y2="75%" className="stroke-destructive/40" strokeWidth="2" />
-                    <line x1="75%" y1="75%" x2="90%" y2="60%" className="stroke-destructive/40" />
-                  </g>
-                </svg>
+        <div id="graph-container" className="lg:col-span-3 relative rounded-xl border graph-container overflow-hidden group shadow-2xl">
+          <ForceGraph2D
+            graphData={graphData}
+            width={dimensions.width}
+            height={dimensions.height}
+            backgroundColor="#1D2126"
+            nodeLabel="label"
+            nodeColor="color"
+            nodeRelSize={6}
+            linkColor={() => 'rgba(255,255,255,0.1)'}
+            linkDirectionalParticles={2}
+            linkDirectionalParticleSpeed={0.01}
+            nodeCanvasObject={(node: any, ctx, globalScale) => {
+              const label = node.label;
+              const fontSize = 12 / globalScale;
+              ctx.font = `${fontSize}px Inter`;
+              const textWidth = ctx.measureText(label).width;
+              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
 
-                {/* Nodes */}
-                {/* Center Node */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                   <div className="w-20 h-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center shadow-[0_0_40px_rgba(90,194,255,0.4)] animate-pulse cursor-pointer">
-                      <Database className="h-8 w-8 text-primary" />
-                   </div>
-                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold bg-black/50 px-2 py-1 rounded backdrop-blur border border-white/10 uppercase tracking-tighter">
-                      ROOT_ORG
-                   </div>
-                </div>
+              ctx.fillStyle = node.color;
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
+              ctx.fill();
 
-                {/* Satellite Nodes */}
-                <div className="absolute top-[25%] left-[25%] group/node cursor-pointer">
-                   <div className="w-12 h-12 rounded-lg bg-secondary/20 border border-secondary flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(77,224,230,0.2)]">
-                      <span className="text-[10px] font-bold">V-102</span>
-                   </div>
-                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-[8px] uppercase tracking-tighter">Verified Vendor</div>
-                </div>
-
-                <div className="absolute bottom-[25%] right-[25%] group/node cursor-pointer">
-                   <div className="w-12 h-12 rounded-lg bg-destructive/20 border border-destructive flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-                      <ShieldAlert className="h-5 w-5 text-destructive" />
-                   </div>
-                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] uppercase tracking-tighter text-destructive font-bold">ANOMALY_DET_01</div>
-                </div>
-
-                <div className="absolute top-[25%] right-[25%] group/node cursor-pointer">
-                   <div className="w-10 h-10 rounded-full bg-muted/40 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <span className="text-[8px] font-bold">INV-A</span>
-                   </div>
-                </div>
-
-                <div className="absolute bottom-[40%] right-[10%] group/node cursor-pointer">
-                   <div className="w-10 h-10 rounded-full bg-destructive/10 border border-destructive/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <span className="text-[8px] font-bold text-destructive">ITC-X</span>
-                   </div>
-                </div>
-             </div>
-          </div>
-
-          {/* Controls */}
-          <div className="absolute bottom-6 left-6 flex gap-2">
-            <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-black/40 backdrop-blur border-white/10 hover:bg-black/60">
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-black/40 backdrop-blur border-white/10 hover:bg-black/60">
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-black/40 backdrop-blur border-white/10 hover:bg-black/60">
-              <Maximize2 className="h-4 w-4" />
-            </Button>
-          </div>
-
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+              ctx.fillText(label, node.x - textWidth / 2, node.y + 10);
+            }}
+          />
+          
           <div className="absolute top-6 right-6 text-[10px] font-bold tracking-widest text-muted-foreground uppercase bg-black/40 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm">
-            Live Nodes: 1,482 • Latency: 42ms
+            Live Nodes: {MOCK_GRAPH_DATA.nodes.length} • Latency: 14ms
           </div>
         </div>
 
@@ -148,7 +139,7 @@ export default function KnowledgeGraphPage() {
               </div>
               <div className="pt-4 border-t border-white/5">
                 <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  Anomaly Detection (Isolation Forest) has identified a high-degree cluster spanning 3 shell entities in the northern region.
+                  Anomaly Detection (Isolation Forest) has identified a high-degree cluster spanning 3 shell entities.
                 </p>
               </div>
               <Button size="sm" className="w-full text-[11px] h-8" variant="outline">Run Lineage Trace</Button>
@@ -164,29 +155,23 @@ export default function KnowledgeGraphPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-3 text-xs">
-                <div className="h-4 w-4 rounded bg-primary/20 border border-primary flex items-center justify-center">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                </div>
-                <span>Root Organization</span>
+                <div className="h-4 w-4 rounded bg-primary/20 border border-primary flex items-center justify-center" />
+                <span>Buyer Organization</span>
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <div className="h-4 w-4 rounded bg-secondary/20 border border-secondary flex items-center justify-center">
-                  <div className="h-1.5 w-1.5 rounded-full bg-secondary" />
-                </div>
-                <span>Verified Trading Hub</span>
+                <div className="h-4 w-4 rounded bg-secondary/20 border border-secondary flex items-center justify-center" />
+                <span>Verified Vendor</span>
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <div className="h-4 w-4 rounded bg-destructive/20 border border-destructive flex items-center justify-center">
-                   <ShieldAlert className="h-2.5 w-2.5 text-destructive" />
-                </div>
-                <span>Suspicious Pattern (ML)</span>
+                 <ShieldAlert className="h-4 w-4 text-destructive" />
+                <span>Suspicious Pattern</span>
               </div>
               <div className="mt-4 p-2 rounded bg-muted/20 border border-white/5">
                 <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Relationship Strength</p>
                 <div className="flex items-center gap-1">
                   <div className="h-[1px] flex-1 bg-white/10" />
                   <div className="h-[2px] flex-1 bg-white/30" />
-                  <div className="h-[3px] flex-1 bg-primary/50 shadow-[0_0_5px_rgba(90,194,255,0.3)]" />
+                  <div className="h-[3px] flex-1 bg-primary/50" />
                 </div>
               </div>
             </CardContent>
