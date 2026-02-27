@@ -176,7 +176,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <span className="text-xs font-bold text-muted-foreground">RELATIONSHIP_PATH</span>
-                    <span className="text-sm font-mono italic">ISSUED -> HAS_IRN -> REPORTED_IN</span>
+                    <span className="text-sm font-mono italic">ISSUED {"->"} HAS_IRN {"->"} REPORTED_IN</span>
                   </div>
                 </div>
               </Card>
@@ -188,7 +188,7 @@ export default async function InvestigationPage({ params }: InvestigationPagePro
                     <div className="flex gap-4">
                        <GitBranch className="h-5 w-5 text-primary" />
                        <div>
-                          <p className="text-sm font-bold">Path: ISSUED -> PAID_TAX Break</p>
+                          <p className="text-sm font-bold">Path: ISSUED {"->"} PAID_TAX Break</p>
                           <p className="text-xs text-muted-foreground">Traversal halted at Return JAN-2024: Payment node missing for supplier GSTIN.</p>
                        </div>
                     </div>
