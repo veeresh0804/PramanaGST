@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { UploadCloud, FileText, CheckCircle, Database, Loader2, Zap, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function UploadPage() {
     "Syncing results to graph database..."
   ];
 
-  const handleExecuteMatch = () => {
+  const handleExecuteMatch = useCallback(() => {
     setIsProcessing(true);
     setProgress(0);
     
@@ -39,25 +39,25 @@ export default function UploadPage() {
           intervalRef.current = null;
         }
         
-        // Update local state and trigger side-effects outside of the render cycle
-        setProgress(100);
+        // Side effects are triggered here safely
         setIsProcessing(false);
+        setProgress(100);
         setCurrentStep(null);
         
-        // Trigger notification safely
-        setTimeout(() => {
-          toast({
-            title: "Matching Engine Complete",
-            description: "Successfully processed 1,240 records. 12 risk flags raised.",
-          });
-        }, 0);
+        toast({
+          title: "Matching Engine Complete",
+          description: "Successfully processed 1,240 records. 12 risk flags raised.",
+        });
       } else {
+        // Update state without side-effects in the render phase
+        const stepIdx = Math.floor((localProgress / 100) * totalSteps);
+        const nextStep = steps[Math.min(stepIdx, totalSteps - 1)];
+        
         setProgress(localProgress);
-        const currentStepIdx = Math.floor((localProgress / 100) * totalSteps);
-        setCurrentStep(steps[Math.min(currentStepIdx, totalSteps - 1)]);
+        setCurrentStep(nextStep);
       }
     }, 150);
-  };
+  }, [toast, steps]);
 
   useEffect(() => {
     return () => {
