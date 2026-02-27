@@ -58,7 +58,7 @@ export default function InvestigationsListPage() {
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Critical Priority</p>
           <div className="flex items-end gap-3">
             <span className="text-4xl font-black text-primary">{stats.critical}</span>
-            <span className="text-[10px] text-muted-foreground font-bold mb-1.5">SCORE > 85</span>
+            <span className="text-[10px] text-muted-foreground font-bold mb-1.5">SCORE {'>'} 85</span>
           </div>
         </div>
         <div className="bg-white border p-6 shadow-sm border-t-4 border-t-accent">
