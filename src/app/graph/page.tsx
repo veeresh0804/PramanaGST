@@ -1,4 +1,3 @@
-
 'use client';
 
 import dynamic from 'next/dynamic';
@@ -21,6 +20,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+// Using dynamic import to prevent SSR issues with canvas-based react-force-graph
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 export default function KnowledgeGraphPage() {
@@ -56,18 +56,13 @@ export default function KnowledgeGraphPage() {
       PAYMENT: '#0099CC'
     };
 
-    // Semi-tree layout logic
+    // Semi-tree layout logic for deterministic visualization
     const nodes = MOCK_GRAPH_DATA.nodes.map(n => {
       let fx = undefined;
-      if (n.type === 'ROOT_NODE') fx = 0;
+      if (n.id === MY_COMPANY_GSTIN) fx = 0;
       else if (n.type === 'SUPPLIER') fx = -300;
       else if (n.type === 'BUYER') fx = 300;
-      else if (n.type === 'INVOICE') {
-        // Find if linked to supplier or buyer
-        const isOutbound = MOCK_GRAPH_DATA.links.some(l => l.source === MY_COMPANY_GSTIN && l.target === n.id);
-        fx = isOutbound ? 150 : -150;
-      }
-
+      
       return {
         ...n,
         fx,
@@ -85,7 +80,11 @@ export default function KnowledgeGraphPage() {
     };
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) return (
+    <div className="flex items-center justify-center h-[600px] border bg-slate-50 animate-pulse">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Loading Network Engine...</p>
+    </div>
+  );
 
   return (
     <div className="space-y-8 h-full flex flex-col pb-10 animate-in fade-in duration-500">
@@ -110,7 +109,7 @@ export default function KnowledgeGraphPage() {
       </div>
 
       <div className="flex-1 min-h-[600px] grid lg:grid-cols-4 gap-8">
-        <div id="graph-container" className="lg:col-span-3 relative border bg-white shadow-sm group">
+        <div id="graph-container" className="lg:col-span-3 relative border bg-white shadow-sm group min-h-[600px]">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -132,13 +131,13 @@ export default function KnowledgeGraphPage() {
               const isRoot = node.type === 'ROOT_NODE';
               const size = isRoot ? 12 : 8;
               
-              // Shadow for Root Node
+              // Node shadow for Root
               if (isRoot) {
                 ctx.shadowColor = 'rgba(0,0,0,0.1)';
                 ctx.shadowBlur = 10;
               }
 
-              // Draw Sharp Rectangle Node
+              // Sharp Node drawing
               ctx.fillStyle = node.color;
               ctx.strokeStyle = node.strokeColor;
               ctx.lineWidth = 1 / globalScale;
@@ -149,24 +148,24 @@ export default function KnowledgeGraphPage() {
               const rectH = size * 2;
               
               ctx.beginPath();
-              ctx.roundRect(rectX, rectY, rectW, rectH, 2);
+              // Standard rect for maximum compatibility
+              ctx.rect(rectX, rectY, rectW, rectH);
               ctx.fill();
               ctx.stroke();
               
-              ctx.shadowBlur = 0; // Reset shadow
+              ctx.shadowBlur = 0;
 
-              // Label Background
+              // Label handling
               const textWidth = ctx.measureText(label).width;
               ctx.fillStyle = 'rgba(255,255,255,0.8)';
               ctx.fillRect(node.x - textWidth/2 - 2, node.y + size + 2, textWidth + 4, fontSize + 4);
 
-              // Label Text
               ctx.fillStyle = isRoot ? '#003366' : '#475569';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               ctx.fillText(label, node.x, node.y + size + 4);
 
-              // Risk Pulse (Subtle)
+              // Risk Pulse
               if (node.riskLevel === 'CRITICAL') {
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, size + 4 + Math.sin(Date.now() / 300) * 2, 0, 2 * Math.PI);
@@ -185,7 +184,7 @@ export default function KnowledgeGraphPage() {
             </Badge>
           </div>
 
-          <div className="absolute bottom-6 left-6 flex items-center gap-4 bg-white/90 backdrop-blur-sm p-4 border border-slate-100 shadow-sm no-print">
+          <div className="absolute bottom-6 left-6 flex items-center gap-4 bg-white/90 backdrop-blur-sm p-4 border border-slate-100 shadow-sm">
              <div className="flex items-center gap-2">
                <div className="h-1 w-6 bg-[#16a34a]" />
                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Compliant</span>

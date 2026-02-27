@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   FileText,
   Clock,
-  Printer
+  Printer,
+  Database
 } from 'lucide-react';
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
@@ -168,7 +169,7 @@ export default function InvestigationPage() {
 
                 <Card className="rounded-none border shadow-sm bg-white border-t-4 border-t-primary">
                   <CardHeader className="py-3 px-6 border-b border-slate-50 bg-slate-50/50">
-                    <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Entity Integrity Metrics</CardTitle>
+                    <CardTitle className="text-[10px) font-bold uppercase tracking-widest text-slate-500">Entity Integrity Metrics</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 space-y-4">
                      <div className="flex justify-between items-center text-xs">
@@ -203,8 +204,8 @@ export default function InvestigationPage() {
                   </div>
                   <div className="space-y-1 bg-slate-800 p-6 text-white/90 font-mono text-xs leading-relaxed border-l-4 border-l-accent shadow-inner">
                     <p className="mb-2 text-accent font-bold uppercase text-[9px]">Traversal Query Output:</p>
-                    MATCH (v:Vendor {"{gstin: '${invoice.vendorGstin}'}"})<br/>
-                    -[:ISSUED]->(i:Invoice {"{id: '${invoice.id}'}"})<br/>
+                    MATCH (v:Vendor {"{gstin: '" + invoice.vendorGstin + "'}"})<br/>
+                    -[:ISSUED]->(i:Invoice {"{id: '" + invoice.id + "'}"})<br/>
                     -[:HAS_IRN]->(n:IRN)<br/>
                     -[:REPORTED_IN]->(r:Return)<br/>
                     RETURN v, i, n, r
