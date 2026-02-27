@@ -47,35 +47,27 @@ export default function KnowledgeGraphPage() {
 
   const graphData = useMemo(() => {
     const nodeColors: Record<string, string> = {
-      ROOT_NODE: '#003366', // Deep Navy
-      SUPPLIER: '#3a7ca5',  // Muted Teal
-      BUYER: '#4682b4',     // Steel Blue
-      INVOICE: '#f1f5f9',   // Light Neutral
-      IRN: '#64748b',       // Slate Grey
-      RETURN_PERIOD: '#94a3b8',
-      PAYMENT: '#0099CC'
+      ROOT_NODE: '#FFB347', // Muted Orange
+      SUPPLIER: '#FFB347',  // Muted Orange
+      BUYER: '#FF8A65',     // Coral
+      INVOICE: '#FFDAB9',   // Peach
+      IRN: '#90CAF9',       // Soft Blue
+      RETURN_PERIOD: '#F48FB1', // Soft Pink
+      PAYMENT: '#B39DDB'    // Soft Purple
     };
 
-    // Semi-tree layout logic for deterministic visualization
-    const nodes = MOCK_GRAPH_DATA.nodes.map(n => {
-      let fx = undefined;
-      if (n.id === MY_COMPANY_GSTIN) fx = 0;
-      else if (n.type === 'SUPPLIER') fx = -300;
-      else if (n.type === 'BUYER') fx = 300;
-      
-      return {
-        ...n,
-        fx,
-        color: nodeColors[n.type] || '#6366f1',
-        strokeColor: n.riskLevel === 'CRITICAL' ? '#ef4444' : '#cbd5e1'
-      };
-    });
+    const nodes = MOCK_GRAPH_DATA.nodes.map(n => ({
+      ...n,
+      color: nodeColors[n.type] || '#BDBDBD',
+      strokeColor: n.riskLevel === 'CRITICAL' ? '#ef4444' : '#ffffff'
+    }));
 
     return {
       nodes,
       links: MOCK_GRAPH_DATA.links.map(l => ({
         ...l,
-        statusColor: l.status === 'RISK' ? '#ef4444' : l.status === 'WARNING' ? '#d97706' : '#16a34a'
+        label: l.type.replace(/_/g, ' '),
+        statusColor: l.status === 'RISK' ? '#ef4444' : l.status === 'WARNING' ? '#d97706' : '#94a3b8'
       }))
     };
   }, []);
@@ -95,7 +87,7 @@ export default function KnowledgeGraphPage() {
             <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-primary">Relationship Intelligence</h1>
-          <p className="text-muted-foreground font-medium">Deterministic traversal of statutory links and transaction lineage.</p>
+          <p className="text-muted-foreground font-medium">Fluid visualization of statutory links and transaction lineage.</p>
         </div>
         <div className="flex gap-3">
           <div className="relative">
@@ -109,67 +101,95 @@ export default function KnowledgeGraphPage() {
       </div>
 
       <div className="flex-1 min-h-[600px] grid lg:grid-cols-4 gap-8">
-        <div id="graph-container" className="lg:col-span-3 relative border bg-white shadow-sm group min-h-[600px]">
+        <div id="graph-container" className="lg:col-span-3 relative border bg-white shadow-sm group min-h-[600px] overflow-hidden">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
             width={dimensions.width}
             height={dimensions.height}
-            backgroundColor="#F8FAFC"
+            backgroundColor="#F8F9FA"
             nodeLabel={(node: any) => `${node.type}: ${node.label}`}
-            nodeRelSize={6}
+            nodeRelSize={8}
             linkColor={(link: any) => link.statusColor}
             linkWidth={1.5}
-            linkDirectionalArrowLength={4}
+            linkDirectionalArrowLength={5}
             linkDirectionalArrowRelPos={1}
+            linkCanvasObjectMode={() => 'after'}
+            linkCanvasObject={(link: any, ctx, globalScale) => {
+              const MAX_FONT_SIZE = 4;
+              const LABEL_NODE_MARGIN = 6;
+
+              const start = link.source;
+              const end = link.target;
+
+              if (typeof start !== 'object' || typeof end !== 'object') return;
+
+              const textPos = {
+                x: start.x + (end.x - start.x) / 2,
+                y: start.y + (end.y - start.y) / 2,
+              };
+
+              const relAngle = Math.atan2(end.y - start.y, end.x - start.x);
+
+              const fontSize = Math.min(MAX_FONT_SIZE, 12 / globalScale);
+              ctx.font = `${fontSize}px Inter`;
+              const textWidth = ctx.measureText(link.label).width;
+              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
+
+              ctx.save();
+              ctx.translate(textPos.x, textPos.y);
+              ctx.rotate(relAngle);
+
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+              ctx.fillRect(-bckgDimensions[0] / 2, -bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = link.statusColor;
+              ctx.fillText(link.label, 0, 0);
+              ctx.restore();
+            }}
             onNodeClick={(node) => setSelectedNode(node)}
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.label;
-              const fontSize = 11 / globalScale;
-              ctx.font = `${fontSize}px "Inter", sans-serif`;
+              const fontSize = 10 / globalScale;
+              const radius = 10;
               
-              const isRoot = node.type === 'ROOT_NODE';
-              const size = isRoot ? 12 : 8;
-              
-              // Node shadow for Root
-              if (isRoot) {
-                ctx.shadowColor = 'rgba(0,0,0,0.1)';
-                ctx.shadowBlur = 10;
-              }
-
-              // Sharp Node drawing
-              ctx.fillStyle = node.color;
-              ctx.strokeStyle = node.strokeColor;
-              ctx.lineWidth = 1 / globalScale;
-              
-              const rectX = node.x - size;
-              const rectY = node.y - size;
-              const rectW = size * 2;
-              const rectH = size * 2;
-              
+              // Draw circle
               ctx.beginPath();
-              // Standard rect for maximum compatibility
-              ctx.rect(rectX, rectY, rectW, rectH);
+              ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+              ctx.fillStyle = node.color;
               ctx.fill();
-              ctx.stroke();
               
-              ctx.shadowBlur = 0;
+              // Draw stroke
+              ctx.lineWidth = 2 / globalScale;
+              ctx.strokeStyle = node.strokeColor;
+              ctx.stroke();
 
-              // Label handling
+              // Node Label inside/below
+              ctx.font = `${fontSize}px Inter`;
               const textWidth = ctx.measureText(label).width;
-              ctx.fillStyle = 'rgba(255,255,255,0.8)';
-              ctx.fillRect(node.x - textWidth/2 - 2, node.y + size + 2, textWidth + 4, fontSize + 4);
-
-              ctx.fillStyle = isRoot ? '#003366' : '#475569';
+              const textHeight = fontSize;
+              
+              // Center text inside circle if small, otherwise below
+              const words = label.split(' ');
+              ctx.fillStyle = '#333333';
               ctx.textAlign = 'center';
-              ctx.textBaseline = 'top';
-              ctx.fillText(label, node.x, node.y + size + 4);
+              ctx.textBaseline = 'middle';
+              
+              // Intelligent label wrapping or truncation for circular nodes
+              if (words.length > 1) {
+                ctx.fillText(words[0], node.x, node.y - fontSize/2);
+                ctx.fillText(words[1], node.x, node.y + fontSize/2);
+              } else {
+                ctx.fillText(label.length > 8 ? label.substring(0, 6) + '...' : label, node.x, node.y);
+              }
 
               // Risk Pulse
               if (node.riskLevel === 'CRITICAL') {
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, size + 4 + Math.sin(Date.now() / 300) * 2, 0, 2 * Math.PI);
-                ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.arc(node.x, node.y, radius + 2 + Math.sin(Date.now() / 200) * 2, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.2)';
                 ctx.stroke();
               }
             }}
@@ -179,27 +199,28 @@ export default function KnowledgeGraphPage() {
             <Badge className="bg-primary text-white font-bold rounded-none px-3 py-1 text-[9px] uppercase tracking-widest shadow-sm">
               <Zap className="h-3 w-3 mr-1.5 text-accent" /> System Trace: Active
             </Badge>
-            <Badge variant="outline" className="bg-white/90 backdrop-blur-sm text-slate-500 rounded-none px-3 py-1 text-[9px] uppercase tracking-widest border-slate-200">
-              Nodes: {MOCK_GRAPH_DATA.nodes.length} | Latency: 12ms
-            </Badge>
           </div>
 
-          <div className="absolute bottom-6 left-6 flex items-center gap-4 bg-white/90 backdrop-blur-sm p-4 border border-slate-100 shadow-sm">
+          <div className="absolute bottom-6 left-6 flex flex-col gap-2 bg-white/95 p-4 border border-slate-100 shadow-sm backdrop-blur-sm">
              <div className="flex items-center gap-2">
-               <div className="h-1 w-6 bg-[#16a34a]" />
-               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Compliant</span>
+               <div className="h-3 w-3 rounded-full bg-[#FFB347]" />
+               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Entities (Supplier/Root)</span>
              </div>
              <div className="flex items-center gap-2">
-               <div className="h-1 w-6 bg-[#d97706]" />
-               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Warning</span>
+               <div className="h-3 w-3 rounded-full bg-[#FFDAB9]" />
+               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Invoices</span>
              </div>
              <div className="flex items-center gap-2">
-               <div className="h-1 w-6 bg-[#ef4444]" />
-               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Risk</span>
+               <div className="h-3 w-3 rounded-full bg-[#B39DDB]" />
+               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Payments/Challans</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <div className="h-3 w-3 rounded-full bg-[#F48FB1]" />
+               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Returns/Filings</span>
              </div>
           </div>
 
-          <Button variant="ghost" size="icon" className="absolute bottom-6 right-6 h-10 w-10 rounded-none bg-white shadow-sm border border-slate-200">
+          <Button variant="ghost" size="icon" className="absolute bottom-6 right-6 h-10 w-10 rounded-none bg-white shadow-sm border border-slate-200" onClick={() => graphRef.current?.zoomToFit(400)}>
             <Maximize2 className="h-4 w-4 text-slate-600" />
           </Button>
         </div>
@@ -213,8 +234,8 @@ export default function KnowledgeGraphPage() {
               {selectedNode ? (
                 <div className="space-y-6 animate-in slide-in-from-right-4">
                   <div className="flex items-center gap-3">
-                    <div className={cn("h-8 w-8 flex items-center justify-center border", selectedNode.riskLevel === 'CRITICAL' ? "border-destructive/20 bg-destructive/5" : "border-primary/20 bg-primary/5")}>
-                       {selectedNode.type === 'ROOT_NODE' ? <Building2 className="h-4 w-4 text-primary" /> : <Info className="h-4 w-4 text-slate-500" />}
+                    <div className={cn("h-10 w-10 rounded-full flex items-center justify-center border", selectedNode.riskLevel === 'CRITICAL' ? "border-destructive/20 bg-destructive/5" : "border-primary/20 bg-primary/5")}>
+                       {selectedNode.type === 'ROOT_NODE' ? <Building2 className="h-5 w-5 text-primary" /> : <Info className="h-5 w-5 text-slate-500" />}
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-sm font-bold text-primary">{selectedNode.label}</p>
@@ -242,10 +263,6 @@ export default function KnowledgeGraphPage() {
                   {selectedNode.type === 'INVOICE' && (
                     <div className="p-4 bg-slate-50 border border-slate-100 space-y-3">
                        <p className="text-[9px] font-black uppercase text-slate-400">Transaction Evidence</p>
-                       <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500">Filing Status</span>
-                          <span className="font-bold text-green-600 uppercase text-[9px]">Reported</span>
-                       </div>
                        <div className="flex justify-between items-center text-xs">
                           <span className="text-slate-500">Value</span>
                           <span className="font-mono font-bold text-primary">₹{selectedNode.properties?.value?.toLocaleString()}</span>
@@ -275,7 +292,7 @@ export default function KnowledgeGraphPage() {
             <CardContent className="p-5 flex gap-4">
               <ShieldAlert className="h-5 w-5 text-destructive shrink-0" />
               <p className="text-[10px] leading-relaxed font-bold text-destructive/80 italic">
-                Recursive ITC flow detected between shell nodes. Deterministic traversal indicates circular trading clusters in Inbound Supply Chain.
+                Deterministic traversal indicates circular trading clusters in Inbound Supply Chain.
               </p>
             </CardContent>
           </Card>
