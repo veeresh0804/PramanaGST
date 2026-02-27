@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file provides a Genkit flow to generate a concise explanation for a flagged invoice.
@@ -13,7 +14,7 @@ import {z} from 'genkit';
 const InvoiceFlagExplanationInputSchema = z.object({
   invoiceId: z.string().describe('The identifier of the invoice.'),
   status: z
-    .enum(['MATCHED', 'FLAGGED', 'UNMATCHED'])
+    .enum(['MATCHED', 'PARTIAL_MATCH', 'FAILED', 'FLAGGED', 'UNMATCHED'])
     .describe('The reconciliation status of the invoice.'),
   riskScore: z.number().int().min(0).max(100).describe('The risk score of the invoice (0-100).'),
   factors: z.array(z.string()).describe('A list of contributing factors for the flagged status.'),
@@ -35,7 +36,7 @@ const invoiceFlagExplanationPrompt = ai.definePrompt({
   name: 'invoiceFlagExplanationPrompt',
   input: {schema: InvoiceFlagExplanationInputSchema},
   output: {schema: InvoiceFlagExplanationOutputSchema},
-  prompt: `You are a GST compliance expert. Explain why invoice {{{invoiceId}}} was flagged.
+  prompt: `You are a GST compliance expert. Explain why invoice {{{invoiceId}}} has the status {{{status}}}.
 
 Status: {{{status}}}
 Risk Score: {{{riskScore}}}/100

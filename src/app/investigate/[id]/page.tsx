@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { explainInvoiceFlag } from '@/ai/flows/invoice-flag-explanation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export default async function InvestigationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

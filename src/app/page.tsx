@@ -11,7 +11,8 @@ import {
   Database,
   ArrowRight,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 import { MOCK_VENDORS, MOCK_INVOICES } from './lib/mock-data';
 import { cn } from '@/lib/utils';
