@@ -1,18 +1,16 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   ShieldAlert, 
   CheckCircle2, 
-  Clock, 
   TrendingUp,
   Database,
   ArrowRight,
   Activity,
-  AlertTriangle,
   Zap,
-  FileText,
-  Search
+  Search,
+  Users
 } from 'lucide-react';
 import { MOCK_VENDORS, MOCK_INVOICES } from './lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -25,10 +23,11 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   BarChart,
-  Bar
+  Bar,
+  Cell
 } from 'recharts';
 import { useMemo } from 'react';
 
@@ -42,83 +41,98 @@ export default function DashboardPage() {
   }, []);
 
   const riskData = useMemo(() => [
-    { name: 'Critical', value: MOCK_VENDORS.filter(v => v.riskLevel === 'CRITICAL').length },
-    { name: 'High', value: MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH').length },
-    { name: 'Medium', value: MOCK_VENDORS.filter(v => v.riskLevel === 'MEDIUM').length },
-    { name: 'Low', value: MOCK_VENDORS.filter(v => v.riskLevel === 'LOW').length },
+    { name: 'Critical', value: MOCK_VENDORS.filter(v => v.riskLevel === 'CRITICAL').length, color: '#ef4444' },
+    { name: 'High', value: MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH').length, color: '#f59e0b' },
+    { name: 'Medium', value: MOCK_VENDORS.filter(v => v.riskLevel === 'MEDIUM').length, color: '#6366f1' },
+    { name: 'Low', value: MOCK_VENDORS.filter(v => v.riskLevel === 'LOW').length, color: '#10b981' },
   ], []);
 
+  const kpis = [
+    { label: 'Match Rate', value: `${stats.reconHealth.toFixed(0)}%`, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    { label: 'Volume', value: `₹${(stats.totalVolume / 10000000).toFixed(1)} Cr`, icon: Database, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+    { label: 'Anomalies', value: stats.riskAnomalies, icon: ShieldAlert, color: 'text-rose-500', bg: 'bg-rose-50' },
+    { label: 'Active Nodes', value: MOCK_VENDORS.length, icon: Users, color: 'text-sky-500', bg: 'bg-sky-50' },
+  ];
+
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 pb-10">
-      <div className="flex items-end justify-between border-b border-border pb-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Pramāṇa Administrative Portal</span>
-          <h1 className="text-4xl font-extrabold tracking-tight text-primary">Executive Summary</h1>
+    <div className="space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-600">
+            Welcome back, Auditor
+          </h1>
+          <p className="text-muted-foreground font-medium">Here's your real-time compliance overview for January 2024.</p>
         </div>
-        <div className="flex gap-3">
-           <Button variant="outline" className="border-border rounded-sm shadow-sm gap-2">
-             <FileText className="h-4 w-4" /> Export Report
-           </Button>
-           <Button className="rounded-sm shadow-sm gap-2 bg-primary text-white">
-             <Search className="h-4 w-4" /> Global Search
-           </Button>
+        <div className="flex gap-4">
+          <Button variant="outline" className="rounded-2xl border-indigo-100 hover:bg-indigo-50 transition-colors px-6">
+            Generate Report
+          </Button>
+          <Button className="rounded-2xl shadow-xl shadow-primary/20 px-8">
+            <Zap className="mr-2 h-4 w-4" /> Run Engine
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
-        {[
-          { label: 'RECONCILIATION VOLUME', value: `₹${(stats.totalVolume / 10000000).toFixed(2)} CR`, icon: Database, trend: 'Baseline Normal', color: 'border-primary' },
-          { label: 'MATCH RATE', value: `${stats.reconHealth.toFixed(1)}%`, icon: CheckCircle2, trend: '+0.4% from avg', color: 'border-slate-500' },
-          { label: 'RISK ANOMALIES', value: stats.riskAnomalies, icon: ShieldAlert, trend: 'Immediate Action Required', color: 'border-destructive' },
-          { label: 'VENDOR ENTITIES', value: MOCK_VENDORS.length, icon: Activity, trend: 'Verified Active', color: 'border-slate-400' },
-        ].map((stat, i) => (
-          <Card key={i} className={cn("rounded-sm border-t-4 shadow-sm", stat.color)}>
-            <CardHeader className="pb-2">
-              <span className="text-[10px] font-extrabold text-muted-foreground tracking-widest uppercase">{stat.label}</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{stat.value}</div>
-              <p className="text-[10px] font-bold text-muted-foreground mt-2 uppercase tracking-wide flex items-center gap-1">
-                {stat.trend}
-              </p>
+        {kpis.map((stat, i) => (
+          <Card key={i} className="fancy-card overflow-hidden">
+            <CardContent className="p-8">
+              <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-6", stat.bg)}>
+                <stat.icon className={cn("h-6 w-6", stat.color)} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                <p className="text-4xl font-black text-slate-900">{stat.value}</p>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 rounded-sm border shadow-sm">
-          <CardHeader className="border-b bg-muted/20">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest">Compliance Performance (6-Month Trend)</CardTitle>
+        <Card className="lg:col-span-2 fancy-card">
+          <CardHeader className="p-8 border-b border-slate-50">
+            <CardTitle className="text-lg font-bold text-slate-800">Compliance Efficiency Trend</CardTitle>
           </CardHeader>
-          <CardContent className="pt-8 h-[350px]">
+          <CardContent className="p-8 h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={[
+              <AreaChart data={[
                 { month: 'Aug', score: 72 }, { month: 'Sep', score: 75 }, { month: 'Oct', score: 70 },
                 { month: 'Nov', score: 82 }, { month: 'Dec', score: 85 }, { month: 'Jan', score: stats.reconHealth }
               ]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Line type="stepAfter" dataKey="score" stroke="#1E2A38" strokeWidth={2} dot={{ r: 4, fill: '#1E2A38' }} />
-              </LineChart>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                <Tooltip 
+                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} 
+                />
+                <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="rounded-sm border shadow-sm">
-          <CardHeader className="border-b bg-muted/20">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest">Entity Risk Stratification</CardTitle>
+        <Card className="fancy-card">
+          <CardHeader className="p-8 border-b border-slate-50">
+            <CardTitle className="text-lg font-bold text-slate-800">Risk Segmentation</CardTitle>
           </CardHeader>
-          <CardContent className="pt-8 h-[350px]">
+          <CardContent className="p-8 h-[350px]">
              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={riskData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <BarChart data={riskData} layout="vertical" margin={{left: 20}}>
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" stroke="#1E2A38" fontSize={10} fontVariant="bold" />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#1E2A38" radius={[0, 4, 4, 0]} barSize={20} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontWeight: 'bold', fill: '#64748b'}} />
+                  <Tooltip cursor={{fill: 'transparent'}} />
+                  <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={24}>
+                    {riskData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
              </ResponsiveContainer>
           </CardContent>
@@ -126,28 +140,35 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-         <Card className="rounded-sm border shadow-sm">
-            <CardHeader className="border-b bg-muted/20 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold uppercase tracking-widest">Urgent Compliance Flags</CardTitle>
+         <Card className="fancy-card">
+            <CardHeader className="p-8 flex flex-row items-center justify-between">
+              <CardTitle className="text-lg font-bold">Priority Investigations</CardTitle>
               <Link href="/investigate">
-                <Button variant="link" size="sm" className="text-[10px] font-bold uppercase tracking-widest text-primary hover:no-underline">View All Records</Button>
+                <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5 rounded-2xl">
+                  View All <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </Link>
             </CardHeader>
             <CardContent className="p-0">
-               <div className="divide-y divide-border">
-                  {MOCK_INVOICES.filter(i => i.status === 'FLAGGED').slice(0, 5).map((inv) => (
-                    <div key={inv.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                       <div className="flex flex-col">
-                          <span className="text-xs font-bold text-primary">{inv.id}</span>
-                          <span className="text-[10px] text-muted-foreground font-mono">{inv.vendorGstin}</span>
-                       </div>
+               <div className="divide-y divide-slate-50">
+                  {MOCK_INVOICES.filter(i => i.status === 'FLAGGED').slice(0, 4).map((inv) => (
+                    <div key={inv.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                            <ShieldAlert className="h-5 w-5 text-rose-500" />
+                          </div>
+                          <div className="flex flex-col">
+                             <span className="font-bold text-slate-900">{inv.id}</span>
+                             <span className="text-xs text-muted-foreground font-mono">{inv.vendorGstin}</span>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-6">
                           <div className="text-right">
-                             <div className="text-xs font-bold">₹{inv.totalAmount.toLocaleString()}</div>
-                             <div className="text-[9px] uppercase font-bold text-destructive">Risk Score: {inv.riskScore}</div>
+                             <div className="font-bold">₹{inv.totalAmount.toLocaleString()}</div>
+                             <Badge variant="outline" className="text-[10px] text-rose-500 border-rose-100 bg-rose-50/50">Risk: {inv.riskScore}</Badge>
                           </div>
                           <Link href={`/investigate/${inv.id}`}>
-                            <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold uppercase border-border hover:bg-primary hover:text-white rounded-sm">Investigate</Button>
+                            <Button size="sm" className="rounded-xl px-4 font-bold">Audit</Button>
                           </Link>
                        </div>
                     </div>
@@ -156,27 +177,20 @@ export default function DashboardPage() {
             </CardContent>
          </Card>
 
-         <Card className="rounded-sm border shadow-sm">
-            <CardHeader className="border-b bg-muted/20">
-              <CardTitle className="text-sm font-bold uppercase tracking-widest">Administrative Audit Trail</CardTitle>
+         <Card className="fancy-card bg-primary text-white">
+            <CardHeader className="p-8">
+              <CardTitle className="text-lg font-bold text-white">Compliance Assistant</CardTitle>
+              <p className="text-primary-foreground/70 text-sm">Powered by Pramana LLM</p>
             </CardHeader>
-            <CardContent className="pt-6">
-               <div className="space-y-6">
-                  {[
-                    { action: 'Manual Verification Requested', ref: 'INV-2024-001', time: '14:22:01' },
-                    { action: 'Batch Reconciliation Sync', ref: 'PR_JAN_24', time: '12:05:44' },
-                    { action: 'Fraud Cluster Identified', ref: 'RING-ALPHA', time: '09:30:12' },
-                    { action: 'GSTR-2B Data Ingested', ref: 'B-12902', time: '08:45:00' },
-                  ].map((log, i) => (
-                    <div key={i} className="flex gap-4 items-start">
-                       <div className="h-2 w-2 rounded-full bg-slate-400 mt-1.5 shrink-0"></div>
-                       <div className="flex-1">
-                          <p className="text-xs font-bold text-primary">{log.action}</p>
-                          <p className="text-[10px] text-muted-foreground">Reference: {log.ref}</p>
-                       </div>
-                       <span className="text-[10px] font-mono text-muted-foreground">{log.time}</span>
-                    </div>
-                  ))}
+            <CardContent className="p-8 pt-0 space-y-6">
+               <div className="bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <p className="text-sm font-medium leading-relaxed italic">
+                    "Detected a recursive flow in Cluster 72. Current evidence suggests a circular trading loop. Would you like me to draft a summary for the official portal?"
+                  </p>
+               </div>
+               <div className="flex gap-4">
+                  <Button className="flex-1 bg-white text-primary hover:bg-white/90 rounded-2xl font-bold">Draft Summary</Button>
+                  <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10 rounded-2xl font-bold">Dismiss</Button>
                </div>
             </CardContent>
          </Card>
