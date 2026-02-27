@@ -1,4 +1,9 @@
+
 export type GSTIN = string;
+
+export type InvoiceStatus = 'MATCHED' | 'PARTIAL_MATCH' | 'FAILED' | 'FLAGGED' | 'UNMATCHED';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type MatchType = 'EXACT' | 'FUZZY' | 'ML' | 'NONE';
 
 export interface Invoice {
   id: string;
@@ -11,27 +16,53 @@ export interface Invoice {
   igst: number;
   totalAmount: number;
   source: 'PURCHASE_REGISTER' | 'GSTR_2A' | 'GSTR_2B';
-  status: 'MATCHED' | 'FLAGGED' | 'UNMATCHED';
+  status: InvoiceStatus;
+  riskScore: number;
+  flags?: string[];
 }
 
 export interface Vendor {
   gstin: GSTIN;
   name: string;
   riskScore: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  riskLevel: RiskLevel;
+  networkMetrics?: {
+    chainDepth: number;
+    clusterRisk: number;
+    degreeCentrality: number;
+  };
 }
 
 export interface MatchResult {
   purchaseInvoiceId: string;
   gstrInvoiceId?: string;
   confidenceScore: number;
-  matchType: 'EXACT' | 'FUZZY' | 'ML' | 'NONE';
-  status: 'MATCHED' | 'FLAGGED' | 'UNMATCHED';
+  matchType: MatchType;
+  status: InvoiceStatus;
+  mismatchReason?: string;
 }
 
 export interface RiskAssessment {
   vendorGstin: GSTIN;
   riskScore: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  riskLevel: RiskLevel;
   contributingFactors: string[];
+  rulesTriggered: {
+    ruleId: string;
+    weight: number;
+    scoreContribution: number;
+  }[];
+}
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: 'VENDOR' | 'INVOICE' | 'BUYER' | 'RETURN';
+  riskLevel?: RiskLevel;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  type: 'REPORTED_IN' | 'PRESENT_IN' | 'TAX_PAYMENT_FOUND' | 'EWAY_BILL_LINKED' | 'MATCHED_WITH' | 'MISMATCH_WITH';
 }

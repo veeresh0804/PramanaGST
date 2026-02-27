@@ -1,14 +1,21 @@
-import { VendorRiskResponseDTO, InvestigationResponseDTO, GraphNodeDTO, GraphEdgeDTO } from '../dtos/contracts';
-import { RiskAssessment, Invoice } from '../../domain/models/entities';
+
+import { VendorRiskResponseDTO, InvestigationResponseDTO, GraphNodeDTO, GraphEdgeDTO, VendorRiskItemDTO } from '../dtos/contracts';
+import { RiskAssessment, Invoice, Vendor, GraphNode, GraphEdge } from '../../domain/models/entities';
 
 export class VendorRiskMapper {
-  static toAPIResponse(assessments: RiskAssessment[]): VendorRiskResponseDTO {
+  static toAPIResponse(vendors: Vendor[]): VendorRiskResponseDTO {
     return {
-      vendors: assessments.map(a => ({
-        gstin: a.vendorGstin,
-        risk_score: a.riskScore,
-        risk_level: a.riskLevel
-      }))
+      vendors: vendors.map(v => ({
+        gstin: v.gstin,
+        name: v.name,
+        risk_score: v.riskScore,
+        risk_level: v.riskLevel,
+        network_metrics: {
+          chain_depth: v.networkMetrics?.chainDepth || 0,
+          cluster_risk: v.networkMetrics?.clusterRisk || 0,
+          degree_centrality: v.networkMetrics?.degreeCentrality || 0
+        }
+      } as VendorRiskItemDTO))
     };
   }
 }
@@ -18,16 +25,28 @@ export class InvestigationMapper {
     invoice: Invoice, 
     risk: RiskAssessment, 
     explanation: string,
-    nodes: GraphNodeDTO[],
-    edges: GraphEdgeDTO[]
+    nodes: GraphNode[],
+    edges: GraphEdge[]
   ): InvestigationResponseDTO {
     return {
       invoice_id: invoice.id,
-      status: invoice.status,
-      risk_score: risk.riskScore,
+      status: invoice.status as any,
+      risk_score: invoice.riskScore,
       explanation: explanation,
-      graph_nodes: nodes,
-      graph_edges: edges
+      factors: risk.contributingFactors,
+      graph: {
+        nodes: nodes.map(n => ({
+          id: n.id,
+          label: n.label,
+          type: n.type,
+          risk_level: n.riskLevel as any
+        })),
+        edges: edges.map(e => ({
+          source: e.source,
+          target: e.target,
+          type: e.type
+        }))
+      }
     };
   }
 }

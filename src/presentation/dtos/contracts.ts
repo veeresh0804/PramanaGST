@@ -1,27 +1,34 @@
+
 export type RiskLevelDTO = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type InvoiceStatusDTO = 'MATCHED' | 'PARTIAL_MATCH' | 'FAILED' | 'FLAGGED' | 'UNMATCHED';
 
 export interface VendorRiskItemDTO {
   gstin: string;
+  name: string;
   risk_score: number;
   risk_level: RiskLevelDTO;
+  network_metrics: {
+    chain_depth: number;
+    cluster_risk: number;
+    degree_centrality: number;
+  };
 }
 
 export interface VendorRiskResponseDTO {
   vendors: VendorRiskItemDTO[];
 }
 
-export type InvoiceStatusDTO = 'MATCHED' | 'FLAGGED' | 'UNMATCHED';
-
 export interface GraphNodeDTO {
   id: string;
-  label?: string;
-  type?: string;
+  label: string;
+  type: string;
+  risk_level?: RiskLevelDTO;
 }
 
 export interface GraphEdgeDTO {
   source: string;
   target: string;
-  relationship?: string;
+  type: string;
 }
 
 export interface InvestigationResponseDTO {
@@ -29,6 +36,9 @@ export interface InvestigationResponseDTO {
   status: InvoiceStatusDTO;
   risk_score: number;
   explanation: string;
-  graph_nodes: GraphNodeDTO[];
-  graph_edges: GraphEdgeDTO[];
+  factors: string[];
+  graph: {
+    nodes: GraphNodeDTO[];
+    edges: GraphEdgeDTO[];
+  };
 }
