@@ -17,7 +17,8 @@ import {
   ExternalLink,
   IndianRupee,
   ShieldAlert,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -31,15 +32,36 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AnalyticsPage() {
+  const { toast } = useToast();
   const [healthData, setHealthData] = useState<HealthScore | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
     calculateGSTHealthScore().then(setHealthData);
   }, []);
+
+  const handleDownloadAudit = (clusterId: string) => {
+    setGeneratingId(clusterId);
+    toast({
+      title: "Pramāṇa Audit Engine",
+      description: "Extracting graph evidence and IRN cross-references...",
+    });
+
+    // Simulate audit generation delay
+    setTimeout(() => {
+      setGeneratingId(null);
+      toast({
+        title: "Audit Report Generated",
+        description: `Deterministic evidence log for ${clusterId} is ready for download.`,
+      });
+      // In a production environment, this would trigger a window.open to a PDF stream
+    }, 2500);
+  };
 
   // Detect Fraud Clusters from Mock Data
   const fraudClusters = useMemo(() => {
@@ -51,7 +73,7 @@ export default function AnalyticsPage() {
         id: 'FRAUD-RING-72',
         title: 'Shell Network Alpha-Epsilon',
         invoices: loopInvoices.filter(i => i.id.startsWith('INV-LOOP')),
-        totalMismatch: 900000, // Derived from mock logic
+        totalMismatch: 900000, 
         severity: 'CRITICAL'
       },
       {
@@ -177,11 +199,21 @@ export default function AnalyticsPage() {
                        <div className="mt-4 flex flex-col gap-2">
                           <Button variant="outline" className="w-full text-[10px] h-7 gap-2 bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive hover:text-white" asChild>
                              <a href="https://selfservice.gst.gov.in/selfservice/" target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-3 w-3" /> File Compliant
+                                <ExternalLink className="h-3 w-3" /> File Complaint
                              </a>
                           </Button>
-                          <Button variant="ghost" className="w-full text-[10px] h-7 gap-2 border border-white/5 font-bold">
-                             <FileWarning className="h-3 w-3" /> Audit PDF
+                          <Button 
+                            variant="ghost" 
+                            className="w-full text-[10px] h-7 gap-2 border border-white/5 font-bold"
+                            onClick={() => handleDownloadAudit(cluster.id)}
+                            disabled={generatingId === cluster.id}
+                          >
+                             {generatingId === cluster.id ? (
+                               <Loader2 className="h-3 w-3 animate-spin" />
+                             ) : (
+                               <FileWarning className="h-3 w-3" />
+                             )}
+                             {generatingId === cluster.id ? 'Analyzing...' : 'Audit PDF'}
                           </Button>
                        </div>
                     </div>
