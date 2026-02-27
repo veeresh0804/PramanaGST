@@ -5,20 +5,34 @@ export type InvoiceStatus = 'MATCHED' | 'PARTIAL_MATCH' | 'FAILED' | 'FLAGGED' |
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 /**
- * SSD Section 10: Knowledge Graph Model Node Labels
+ * SSD Section 10: Knowledge Graph Model Node Labels (Redesign V3)
  */
-export type GraphNodeType = 'TAXPAYER' | 'INVOICE' | 'RETURN' | 'PAYMENT' | 'IRN';
+export type GraphNodeType = 
+  | 'ROOT_NODE' 
+  | 'SUPPLIER' 
+  | 'BUYER' 
+  | 'INVOICE' 
+  | 'RETURN_PERIOD' 
+  | 'IRN' 
+  | 'PAYMENT' 
+  | 'CREDIT_NOTE';
 
 /**
  * SSD Section 6.2: Required Relationships (Deterministic Traversal)
  */
 export type GraphEdgeType = 
-  | 'ISSUED' 
-  | 'RECEIVED_BY' 
-  | 'REPORTED_IN' 
-  | 'PAID_TAX' 
-  | 'HAS_IRN' 
-  | 'CLAIMED_IN';
+  | 'ITC_CLAIMED' 
+  | 'ITC_AVAILABLE' 
+  | 'TAX_PAID' 
+  | 'TAX_NOT_PAID' 
+  | 'IRN_VALID' 
+  | 'IRN_CANCELLED' 
+  | 'HIGH_RISK' 
+  | 'MATCHED' 
+  | 'MISMATCHED'
+  | 'ISSUED'
+  | 'RECEIVED_BY'
+  | 'REPORTED_IN';
 
 export interface Invoice {
   id: string;
@@ -62,12 +76,15 @@ export interface GraphNode {
   type: GraphNodeType;
   riskLevel?: RiskLevel;
   properties?: Record<string, any>;
+  x?: number;
+  y?: number;
 }
 
 export interface GraphEdge {
   source: string;
   target: string;
   type: GraphEdgeType;
+  status?: 'CLEAN' | 'WARNING' | 'RISK' | 'PENDING';
   properties?: Record<string, any>;
 }
 
