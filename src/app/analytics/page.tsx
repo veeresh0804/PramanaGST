@@ -11,7 +11,11 @@ import {
   Activity, 
   AlertCircle, 
   Network,
-  ArrowUpRight
+  ArrowUpRight,
+  FileWarning,
+  ExternalLink,
+  IndianRupee,
+  ShieldAlert
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -23,6 +27,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function AnalyticsPage() {
   const [healthData, setHealthData] = useState<HealthScore | null>(null);
@@ -106,30 +111,51 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 bg-card/50 border shadow-sm">
+        <Card className="lg:col-span-3 bg-card/50 border shadow-sm flex flex-col">
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
               <Network className="h-5 w-5 text-secondary" />
               Circular Trading Loops
             </CardTitle>
+            <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-destructive">
+              Suspicious Flow Detected
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 space-y-4">
              <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 relative">
                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-bold text-destructive uppercase tracking-widest">Active Loop Found</span>
-                      <ArrowUpRight className="h-4 w-4 text-destructive" />
+                      <span className="text-xs font-bold text-destructive uppercase tracking-widest">Fraud Cluster</span>
+                      <ShieldAlert className="h-4 w-4 text-destructive" />
                    </div>
-                   <p className="text-sm font-medium">Loop ID: FRAUD-RING-72</p>
-                   <p className="text-[10px] text-muted-foreground mt-1">Spans 4 Tier-3 vendors across 2 states.</p>
-                   <div className="mt-3 flex gap-1">
-                      <div className="h-1 flex-1 bg-destructive rounded-full" />
-                      <div className="h-1 flex-1 bg-destructive rounded-full opacity-50" />
-                      <div className="h-1 flex-1 bg-destructive rounded-full opacity-20" />
+                   <p className="text-sm font-bold">Loop ID: FRAUD-RING-72</p>
+                   
+                   <div className="mt-4 grid grid-cols-2 gap-4 border-t border-destructive/20 pt-4">
+                      <div className="space-y-1">
+                         <p className="text-[9px] uppercase text-muted-foreground font-bold">Invoiced Amount</p>
+                         <p className="text-xs font-mono">₹1,18,00,000</p>
+                      </div>
+                      <div className="space-y-1">
+                         <p className="text-[9px] uppercase text-destructive font-bold">Tax Mismatch</p>
+                         <p className="text-xs font-mono text-destructive">₹18,00,000</p>
+                      </div>
                    </div>
+
+                   <p className="text-[10px] text-muted-foreground mt-3 leading-tight">
+                     Pramāṇa Engine detected a circular loop where the primary tax liability was offset by non-existent input tax credits within Shell Cluster A.
+                   </p>
                 </div>
-                <div className="text-[11px] text-muted-foreground italic leading-relaxed">
-                   AI Engine has detected 2 candidate fraud rings in the last batch upload. Pending Graph lineage verification.
+                
+                <div className="space-y-2">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Actionable Report</p>
+                   <Button variant="outline" className="w-full text-[10px] h-8 gap-2 bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive hover:text-white" asChild>
+                      <a href="https://selfservice.gst.gov.in/selfservice/" target="_blank" rel="noopener noreferrer">
+                         <ExternalLink className="h-3 w-3" /> Report to GST Portal
+                      </a>
+                   </Button>
+                   <Button variant="ghost" className="w-full text-[10px] h-8 gap-2 border border-white/5 font-bold">
+                      <FileWarning className="h-3 w-3" /> Generate Audit PDF
+                   </Button>
                 </div>
              </div>
           </CardContent>
