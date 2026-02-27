@@ -10,7 +10,10 @@ import {
   Activity,
   Zap,
   Search,
-  Users
+  Users,
+  ChevronRight,
+  FileText,
+  HelpCircle
 } from 'lucide-react';
 import { MOCK_VENDORS, MOCK_INVOICES } from './lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -30,6 +33,7 @@ import {
   Cell
 } from 'recharts';
 import { useMemo } from 'react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function DashboardPage() {
   const stats = useMemo(() => {
@@ -40,160 +44,149 @@ export default function DashboardPage() {
     return { totalVolume, riskAnomalies, reconHealth };
   }, []);
 
-  const riskData = useMemo(() => [
-    { name: 'Critical', value: MOCK_VENDORS.filter(v => v.riskLevel === 'CRITICAL').length, color: '#ef4444' },
-    { name: 'High', value: MOCK_VENDORS.filter(v => v.riskLevel === 'HIGH').length, color: '#f59e0b' },
-    { name: 'Medium', value: MOCK_VENDORS.filter(v => v.riskLevel === 'MEDIUM').length, color: '#6366f1' },
-    { name: 'Low', value: MOCK_VENDORS.filter(v => v.riskLevel === 'LOW').length, color: '#10b981' },
-  ], []);
-
-  const kpis = [
-    { label: 'Match Rate', value: `${stats.reconHealth.toFixed(0)}%`, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { label: 'Volume', value: `₹${(stats.totalVolume / 10000000).toFixed(1)} Cr`, icon: Database, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    { label: 'Anomalies', value: stats.riskAnomalies, icon: ShieldAlert, color: 'text-rose-500', bg: 'bg-rose-50' },
-    { label: 'Active Nodes', value: MOCK_VENDORS.length, icon: Users, color: 'text-sky-500', bg: 'bg-sky-50' },
-  ];
-
   return (
-    <div className="space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-600">
-            Welcome back, Auditor
-          </h1>
-          <p className="text-muted-foreground font-medium">Here's your real-time compliance overview for January 2024.</p>
-        </div>
-        <div className="flex gap-4">
-          <Button variant="outline" className="rounded-2xl border-indigo-100 hover:bg-indigo-50 transition-colors px-6">
-            Generate Report
-          </Button>
-          <Button className="rounded-2xl shadow-xl shadow-primary/20 px-8">
-            <Zap className="mr-2 h-4 w-4" /> Run Engine
-          </Button>
-        </div>
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-extrabold text-primary tracking-tight">Official Intelligence Dashboard</h1>
+        <p className="text-slate-500 font-medium">Consolidated compliance oversight and predictive risk modeling.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-4">
-        {kpis.map((stat, i) => (
-          <Card key={i} className="fancy-card overflow-hidden">
-            <CardContent className="p-8">
-              <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-6", stat.bg)}>
-                <stat.icon className={cn("h-6 w-6", stat.color)} />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
-                <p className="text-4xl font-black text-slate-900">{stat.value}</p>
-              </div>
+      <div className="grid lg:grid-cols-4 gap-8">
+        {/* Main content area */}
+        <div className="lg:col-span-3 space-y-8">
+          
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="aadhaar-card p-8 group">
+              <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
+                Execute Matching Engine <ChevronRight className="h-5 w-5 text-accent" />
+              </h3>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Trigger the deterministic reconciliation process for current period Purchase Registers against GSTR-2B data nodes.
+              </p>
+              <Link href="/upload" className="text-primary font-bold text-xs uppercase tracking-widest hover:underline flex items-center gap-1">
+                Run Engine Pipeline <Activity className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="aadhaar-card p-8">
+              <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
+                Verify Risk Nodes <ChevronRight className="h-5 w-5 text-accent" />
+              </h3>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Review flagged entities and high-centrality shell network clusters detected in the knowledge graph traversal.
+              </p>
+              <Link href="/vendors" className="text-primary font-bold text-xs uppercase tracking-widest hover:underline flex items-center gap-1">
+                Check Intelligence Status <ShieldAlert className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="aadhaar-card p-8">
+              <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
+                Investigation Module <ChevronRight className="h-5 w-5 text-accent" />
+              </h3>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Access the AI-powered Explainability Layer for detailed reasoning on specific transaction mismatches and fraud rings.
+              </p>
+              <Link href="/investigate" className="text-primary font-bold text-xs uppercase tracking-widest hover:underline flex items-center gap-1">
+                Open Case Manager <Search className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="aadhaar-card p-8 bg-slate-50/50">
+              <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
+                Relationship Explorer <ChevronRight className="h-5 w-5 text-accent" />
+              </h3>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Visualize the multi-layered GST network and trace the lineage of tax credits through the supply chain.
+              </p>
+              <Link href="/graph" className="text-primary font-bold text-xs uppercase tracking-widest hover:underline flex items-center gap-1">
+                Launch Graph Visualizer <Database className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+
+          <Card className="rounded-none border shadow-sm">
+            <CardHeader className="bg-slate-50 border-b py-4">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500">Compliance Efficiency Trend</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={[
+                  { month: 'Aug', score: 72 }, { month: 'Sep', score: 75 }, { month: 'Oct', score: 70 },
+                  { month: 'Nov', score: 82 }, { month: 'Dec', score: 85 }, { month: 'Jan', score: stats.reconHealth }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="score" stroke="#003366" strokeWidth={2} fill="#00336610" />
+                </AreaChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 fancy-card">
-          <CardHeader className="p-8 border-b border-slate-50">
-            <CardTitle className="text-lg font-bold text-slate-800">Compliance Efficiency Trend</CardTitle>
-          </CardHeader>
-          <CardContent className="p-8 h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={[
-                { month: 'Aug', score: 72 }, { month: 'Sep', score: 75 }, { month: 'Oct', score: 70 },
-                { month: 'Nov', score: 82 }, { month: 'Dec', score: 85 }, { month: 'Jan', score: stats.reconHealth }
-              ]}>
-                <defs>
-                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} 
-                />
-                <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Right sidebar panel */}
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold flex items-center gap-2 text-slate-800">
+              <FileText className="h-4 w-4 text-primary" /> References
+            </h3>
+            <div className="bg-white border rounded divide-y">
+              {[
+                "Statutory Filing Manual v2.1",
+                "Rule-based Logic Documentation",
+                "Graph Schema Definition",
+                "Audit Certification Standards",
+                "Risk Weightage Policy 2024"
+              ].map((item, i) => (
+                <div key={i} className="px-4 py-3 flex items-center justify-between group cursor-pointer hover:bg-slate-50">
+                  <span className="text-xs font-medium text-slate-600">{item}</span>
+                  <ChevronRight className="h-3 w-3 text-slate-300 group-hover:text-primary transition-colors" />
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <Card className="fancy-card">
-          <CardHeader className="p-8 border-b border-slate-50">
-            <CardTitle className="text-lg font-bold text-slate-800">Risk Segmentation</CardTitle>
-          </CardHeader>
-          <CardContent className="p-8 h-[350px]">
-             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={riskData} layout="vertical" margin={{left: 20}}>
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontWeight: 'bold', fill: '#64748b'}} />
-                  <Tooltip cursor={{fill: 'transparent'}} />
-                  <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={24}>
-                    {riskData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold flex items-center gap-2 text-slate-800">
+              <HelpCircle className="h-4 w-4 text-primary" /> Common Queries
+            </h3>
+            <Accordion type="single" collapsible className="w-full bg-white border rounded">
+              <AccordionItem value="item-1" className="px-4 border-b">
+                <AccordionTrigger className="text-xs font-bold py-3 text-left">How are risk scores calculated?</AccordionTrigger>
+                <AccordionContent className="text-[11px] text-slate-500 leading-relaxed">
+                  Risk scores are deterministic outputs of graph traversal algorithms measuring network centrality and statutory filing mismatches.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-2" className="px-4 border-b">
+                <AccordionTrigger className="text-xs font-bold py-3 text-left">What is the IRN verification logic?</AccordionTrigger>
+                <AccordionContent className="text-[11px] text-slate-500 leading-relaxed">
+                  The system cross-references the Invoice Reference Number against portal logs to detect post-issuance cancellations.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-3" className="px-4">
+                <AccordionTrigger className="text-xs font-bold py-3 text-left">Circular flow detection rules?</AccordionTrigger>
+                <AccordionContent className="text-[11px] text-slate-500 leading-relaxed">
+                  Cycles are identified when ITC flows return to an originating entity or its direct affiliates without commercial substance.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-         <Card className="fancy-card">
-            <CardHeader className="p-8 flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-bold">Priority Investigations</CardTitle>
-              <Link href="/investigate">
-                <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5 rounded-2xl">
-                  View All <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="p-0">
-               <div className="divide-y divide-slate-50">
-                  {MOCK_INVOICES.filter(i => i.status === 'FLAGGED').slice(0, 4).map((inv) => (
-                    <div key={inv.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                       <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                            <ShieldAlert className="h-5 w-5 text-rose-500" />
-                          </div>
-                          <div className="flex flex-col">
-                             <span className="font-bold text-slate-900">{inv.id}</span>
-                             <span className="text-xs text-muted-foreground font-mono">{inv.vendorGstin}</span>
-                          </div>
-                       </div>
-                       <div className="flex items-center gap-6">
-                          <div className="text-right">
-                             <div className="font-bold">₹{inv.totalAmount.toLocaleString()}</div>
-                             <Badge variant="outline" className="text-[10px] text-rose-500 border-rose-100 bg-rose-50/50">Risk: {inv.riskScore}</Badge>
-                          </div>
-                          <Link href={`/investigate/${inv.id}`}>
-                            <Button size="sm" className="rounded-xl px-4 font-bold">Audit</Button>
-                          </Link>
-                       </div>
-                    </div>
-                  ))}
-               </div>
-            </CardContent>
-         </Card>
-
-         <Card className="fancy-card bg-primary text-white">
-            <CardHeader className="p-8">
-              <CardTitle className="text-lg font-bold text-white">Compliance Assistant</CardTitle>
-              <p className="text-primary-foreground/70 text-sm">Powered by Pramana LLM</p>
-            </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-6">
-               <div className="bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
-                  <p className="text-sm font-medium leading-relaxed italic">
-                    "Detected a recursive flow in Cluster 72. Current evidence suggests a circular trading loop. Would you like me to draft a summary for the official portal?"
-                  </p>
-               </div>
-               <div className="flex gap-4">
-                  <Button className="flex-1 bg-white text-primary hover:bg-white/90 rounded-2xl font-bold">Draft Summary</Button>
-                  <Button variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10 rounded-2xl font-bold">Dismiss</Button>
-               </div>
-            </CardContent>
-         </Card>
+          <Card className="bg-primary text-white p-6 rounded-none">
+             <div className="flex items-center gap-3 mb-4">
+               <Zap className="h-5 w-5 text-accent" />
+               <h4 className="font-bold text-sm">Pramana Assistant</h4>
+             </div>
+             <p className="text-[11px] leading-relaxed text-white/80 italic">
+               "System observation: Suspicious loop detected in Cluster 72. Analysis suggests immediate audit escalation for Entity ZEN-91."
+             </p>
+             <Button size="sm" className="w-full mt-4 bg-white text-primary hover:bg-white/90 font-bold text-xs uppercase rounded-none">
+               Draft Report
+             </Button>
+          </Card>
+        </div>
       </div>
     </div>
   );

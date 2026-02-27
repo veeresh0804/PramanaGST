@@ -1,75 +1,89 @@
+'use client';
+
 import Link from 'next/link';
 import { 
-  LayoutDashboard, 
-  ShieldAlert, 
-  UploadCloud, 
+  ChevronDown, 
   Search, 
-  Database, 
-  Settings,
+  Globe, 
+  User,
+  LayoutDashboard,
+  ShieldAlert,
+  Search as SearchIcon,
+  UploadCloud,
+  Database,
   Activity,
-  Bell,
-  Sparkles
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const navItems = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
-  { name: 'Risk Intelligence', icon: ShieldAlert, href: '/vendors' },
-  { name: 'Investigations', icon: Search, href: '/investigate' },
-  { name: 'Data Center', icon: UploadCloud, href: '/upload' },
-  { name: 'Knowledge Graph', icon: Database, href: '/graph' },
-  { name: 'Advanced Analytics', icon: Activity, href: '/analytics' },
-  { name: 'Notifications', icon: Bell, href: '/alerts' },
+  { name: 'Dashboard', href: '/' },
+  { name: 'Risk Intelligence', href: '/vendors' },
+  { name: 'Investigations', href: '/investigate' },
+  { name: 'Data Center', href: '/upload' },
+  { name: 'Knowledge Graph', href: '/graph' },
+  { name: 'Advanced Analytics', href: '/analytics' },
+  { name: 'Notifications', href: '/alerts' },
 ];
 
 export function MainSidebar() {
   return (
-    <div className="flex h-screen w-72 flex-col bg-white border-r px-6 py-8">
-      <div className="flex items-center gap-3 mb-12 px-2">
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-indigo-400 flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-          <Sparkles className="text-white h-6 w-6" />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
-            Pramana
-          </span>
-          <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
-            GST Intelligence
-          </span>
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-2">
-        {navItems.map((item) => (
-          <Link key={item.name} href={item.href}>
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start gap-4 px-4 py-6 text-sm font-semibold rounded-2xl group transition-all duration-200",
-                "hover:bg-primary/5 hover:text-primary"
-              )}
-            >
-              <item.icon className="h-5 w-5 opacity-70 group-hover:opacity-100 transition-opacity" />
-              {item.name}
-            </Button>
-          </Link>
-        ))}
-      </div>
-
-      <div className="mt-auto pt-8 border-t space-y-4">
-        <div className="bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-2xl border border-primary/10">
-          <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">System Health</p>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-bold text-slate-600">Active Node 0xAF2</span>
+    <header className="w-full flex flex-col no-print">
+      {/* Top beige bar */}
+      <div className="official-header">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+             <div className="flex items-center gap-2">
+               <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs">GST</div>
+               <span className="text-2xl font-bold text-slate-800 tracking-tight">PramanaGST</span>
+             </div>
+             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Proof of Compliance</span>
           </div>
         </div>
-        <Button variant="ghost" className="w-full justify-start gap-4 px-4 py-2 text-sm font-medium text-slate-500 rounded-2xl hover:bg-slate-50">
-          <Settings className="h-5 w-5 opacity-70" />
-          Settings
-        </Button>
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-bold text-slate-700">Goods and Services Tax</span>
+          <span className="text-xs text-slate-500">Government of India Intelligence Portal</span>
+        </div>
       </div>
-    </div>
+
+      {/* Deep blue navigation bar */}
+      <nav className="official-nav">
+        <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
+          <div className="flex items-center">
+            {navItems.map((item) => (
+              <Link key={item.name} href={item.href} className="nav-item">
+                {item.name} <ChevronDown className="h-3 w-3 opacity-60" />
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative flex items-center">
+              <Input 
+                placeholder="Search..." 
+                className="h-8 bg-transparent border-white/20 text-white placeholder:text-white/50 text-xs rounded-none w-48 focus-visible:ring-0 focus-visible:border-white"
+              />
+              <div className="bg-sky-500 h-8 px-2 flex items-center cursor-pointer">
+                <span className="text-xs font-bold text-white uppercase">Go</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-white/80 hover:text-white cursor-pointer px-2 py-3">
+              <User className="h-4 w-4" />
+              <span className="text-xs font-medium">Profile</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Breadcrumbs-style status bar */}
+      <div className="bg-white border-b px-10 py-2">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span>Pramana</span>
+          <span>&gt;</span>
+          <span className="text-primary">Official Dashboard</span>
+        </div>
+      </div>
+    </header>
   );
 }
