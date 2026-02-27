@@ -1,0 +1,66 @@
+
+{
+  "entities": {
+    "Taxpayer": {
+      "title": "Taxpayer Entity",
+      "description": "Information about a GST-registered entity.",
+      "type": "object",
+      "properties": {
+        "gstin": { "type": "string", "description": "Goods and Services Tax Identification Number" },
+        "legalName": { "type": "string" },
+        "stateCode": { "type": "string" },
+        "registrationType": { "type": "string", "enum": ["Regular", "Composition"] },
+        "riskScore": { "type": "number" },
+        "riskLevel": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] }
+      },
+      "required": ["gstin", "legalName"]
+    },
+    "Invoice": {
+      "title": "GST Invoice",
+      "description": "Deterministic record of a transaction between two taxpayers.",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string" },
+        "supplierGstin": { "type": "string" },
+        "recipientGstin": { "type": "string" },
+        "invoiceDate": { "type": "string", "format": "date" },
+        "taxableAmount": { "type": "number" },
+        "cgst": { "type": "number" },
+        "sgst": { "type": "number" },
+        "igst": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "irn": { "type": "string", "description": "Invoice Reference Number" },
+        "status": { "type": "string", "enum": ["MATCHED", "PARTIAL_MATCH", "FAILED", "FLAGGED", "UNMATCHED"] }
+      },
+      "required": ["invoiceNumber", "supplierGstin", "recipientGstin", "totalAmount"]
+    },
+    "Payment": {
+      "title": "Tax Payment Record",
+      "description": "Evidence of tax remittance for a specific return period.",
+      "type": "object",
+      "properties": {
+        "supplierGstin": { "type": "string" },
+        "returnPeriod": { "type": "string" },
+        "taxPaid": { "type": "number" }
+      },
+      "required": ["supplierGstin", "returnPeriod", "taxPaid"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/taxpayers/{gstin}": {
+      "schema": "Taxpayer",
+      "description": "Central taxpayer registry."
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Reconciled invoice data."
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Tax payment evidence records."
+    }
+  }
+}

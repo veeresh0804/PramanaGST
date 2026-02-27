@@ -1,12 +1,14 @@
 
+/**
+ * @fileOverview Refined Domain Models for PramanaGST
+ * Based on Final Dataset Schema Implemented (Audit V1)
+ */
+
 export type GSTIN = string;
 
 export type InvoiceStatus = 'MATCHED' | 'PARTIAL_MATCH' | 'FAILED' | 'FLAGGED' | 'UNMATCHED';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
-/**
- * SSD Section 10: Knowledge Graph Model Node Labels (Redesign V3)
- */
 export type GraphNodeType = 
   | 'ROOT_NODE' 
   | 'SUPPLIER' 
@@ -17,9 +19,6 @@ export type GraphNodeType =
   | 'PAYMENT' 
   | 'CREDIT_NOTE';
 
-/**
- * SSD Section 6.2: Required Relationships (Deterministic Traversal)
- */
 export type GraphEdgeType = 
   | 'ITC_CLAIMED' 
   | 'ITC_AVAILABLE' 
@@ -35,10 +34,10 @@ export type GraphEdgeType =
   | 'REPORTED_IN';
 
 export interface Invoice {
-  id: string;
+  id: string; // Internal system ID
   invoiceNumber: string;
-  vendorGstin: GSTIN;
-  recipientGstin?: GSTIN;
+  vendorGstin: GSTIN; // Supplier GSTIN
+  recipientGstin: GSTIN; // Recipient GSTIN
   invoiceDate: Date;
   taxableAmount: number;
   cgst: number;
@@ -70,6 +69,12 @@ export interface Vendor {
   };
 }
 
+export interface PaymentEvidence {
+  supplierGstin: GSTIN;
+  returnPeriod: string;
+  taxPaid: number;
+}
+
 export interface GraphNode {
   id: string;
   label: string;
@@ -78,6 +83,8 @@ export interface GraphNode {
   properties?: Record<string, any>;
   x?: number;
   y?: number;
+  fx?: number | null;
+  fy?: number | null;
 }
 
 export interface GraphEdge {
