@@ -1,10 +1,11 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { calculateGSTHealthScore } from '@/modules/analytics/health-scorer';
 import { HealthScore } from '@/domain/models/analytics';
+import { MOCK_INVOICES, MOCK_VENDORS } from '@/app/lib/mock-data';
 import { 
   ShieldCheck, 
   TrendingUp, 
@@ -15,7 +16,8 @@ import {
   FileWarning,
   ExternalLink,
   IndianRupee,
-  ShieldAlert
+  ShieldAlert,
+  ChevronRight
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -28,6 +30,7 @@ import {
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AnalyticsPage() {
   const [healthData, setHealthData] = useState<HealthScore | null>(null);
@@ -36,6 +39,31 @@ export default function AnalyticsPage() {
   useEffect(() => {
     setMounted(true);
     calculateGSTHealthScore().then(setHealthData);
+  }, []);
+
+  // Detect Fraud Clusters from Mock Data
+  const fraudClusters = useMemo(() => {
+    const loopInvoices = MOCK_INVOICES.filter(inv => inv.flags?.includes('CIRCULAR_TRADING_LOOP'));
+    
+    // Group into clusters (simplified logic for demonstration)
+    const clusters = [
+      {
+        id: 'FRAUD-RING-72',
+        title: 'Shell Network Alpha-Epsilon',
+        invoices: loopInvoices.filter(i => i.id.startsWith('INV-LOOP')),
+        totalMismatch: 900000, // Derived from mock logic
+        severity: 'CRITICAL'
+      },
+      {
+        id: 'FRAUD-RING-91',
+        title: 'Zenith Cluster',
+        invoices: loopInvoices.filter(i => i.id === 'INV-2024-003'),
+        totalMismatch: 36000,
+        severity: 'HIGH'
+      }
+    ].filter(c => c.invoices.length > 0);
+
+    return clusters;
   }, []);
 
   if (!mounted) return null;
@@ -98,7 +126,7 @@ export default function AnalyticsPage() {
               Risk Propagation Trend
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[400px]">
              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={healthData.monthlyTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
@@ -118,46 +146,48 @@ export default function AnalyticsPage() {
               Circular Trading Loops
             </CardTitle>
             <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-destructive">
-              Suspicious Flow Detected
+              {fraudClusters.length} Suspicious Flows Detected
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-             <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 relative">
-                   <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-bold text-destructive uppercase tracking-widest">Fraud Cluster</span>
-                      <ShieldAlert className="h-4 w-4 text-destructive" />
-                   </div>
-                   <p className="text-sm font-bold">Loop ID: FRAUD-RING-72</p>
-                   
-                   <div className="mt-4 grid grid-cols-2 gap-4 border-t border-destructive/20 pt-4">
-                      <div className="space-y-1">
-                         <p className="text-[9px] uppercase text-muted-foreground font-bold">Invoiced Amount</p>
-                         <p className="text-xs font-mono">₹1,18,00,000</p>
-                      </div>
-                      <div className="space-y-1">
-                         <p className="text-[9px] uppercase text-destructive font-bold">Tax Mismatch</p>
-                         <p className="text-xs font-mono text-destructive">₹18,00,000</p>
-                      </div>
-                   </div>
+          <CardContent className="flex-1">
+             <ScrollArea className="h-[360px] pr-4">
+               <div className="space-y-4">
+                  {fraudClusters.map((cluster) => (
+                    <div key={cluster.id} className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 relative group hover:bg-destructive/10 transition-colors">
+                       <div className="flex justify-between items-start mb-2">
+                          <span className="text-[10px] font-bold text-destructive uppercase tracking-widest">
+                            {cluster.severity} RISK
+                          </span>
+                          <ShieldAlert className="h-4 w-4 text-destructive" />
+                       </div>
+                       <p className="text-sm font-bold">{cluster.title}</p>
+                       <p className="text-[10px] text-muted-foreground font-mono">ID: {cluster.id}</p>
+                       
+                       <div className="mt-4 grid grid-cols-2 gap-4 border-t border-destructive/20 pt-4">
+                          <div className="space-y-1">
+                             <p className="text-[9px] uppercase text-muted-foreground font-bold">Volume</p>
+                             <p className="text-xs font-mono">₹{cluster.invoices.reduce((acc, i) => acc + i.totalAmount, 0).toLocaleString()}</p>
+                          </div>
+                          <div className="space-y-1">
+                             <p className="text-[9px] uppercase text-destructive font-bold">Tax Mismatch</p>
+                             <p className="text-xs font-mono text-destructive">₹{cluster.totalMismatch.toLocaleString()}</p>
+                          </div>
+                       </div>
 
-                   <p className="text-[10px] text-muted-foreground mt-3 leading-tight">
-                     Pramāṇa Engine detected a circular loop where the primary tax liability was offset by non-existent input tax credits within Shell Cluster A.
-                   </p>
-                </div>
-                
-                <div className="space-y-2">
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Actionable Report</p>
-                   <Button variant="outline" className="w-full text-[10px] h-8 gap-2 bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive hover:text-white" asChild>
-                      <a href="https://selfservice.gst.gov.in/selfservice/" target="_blank" rel="noopener noreferrer">
-                         <ExternalLink className="h-3 w-3" /> Report to GST Portal
-                      </a>
-                   </Button>
-                   <Button variant="ghost" className="w-full text-[10px] h-8 gap-2 border border-white/5 font-bold">
-                      <FileWarning className="h-3 w-3" /> Generate Audit PDF
-                   </Button>
-                </div>
-             </div>
+                       <div className="mt-4 flex flex-col gap-2">
+                          <Button variant="outline" className="w-full text-[10px] h-7 gap-2 bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive hover:text-white" asChild>
+                             <a href="https://selfservice.gst.gov.in/selfservice/" target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-3 w-3" /> File Compliant
+                             </a>
+                          </Button>
+                          <Button variant="ghost" className="w-full text-[10px] h-7 gap-2 border border-white/5 font-bold">
+                             <FileWarning className="h-3 w-3" /> Audit PDF
+                          </Button>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+             </ScrollArea>
           </CardContent>
         </Card>
       </div>
