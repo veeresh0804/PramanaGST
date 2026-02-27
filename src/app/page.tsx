@@ -17,6 +17,7 @@ import { MOCK_VENDORS, MOCK_INVOICES } from './lib/mock-data';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   BarChart, 
   Bar, 
@@ -53,12 +54,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="font-headline text-3xl font-bold tracking-tight">Compliance Intelligence</h1>
+        <h1 className="font-headline text-3xl font-bold tracking-tight text-foreground">Compliance Intelligence</h1>
         <p className="text-muted-foreground">Real-time risk aggregation and automated GST reconciliation insights.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-primary bg-card/50 backdrop-blur">
+        <Card className="border-l-4 border-l-primary bg-card/50 backdrop-blur shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Matched Volume</CardTitle>
             <Database className="h-4 w-4 text-primary" />
@@ -71,7 +72,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         
-        <Card className="border-l-4 border-l-secondary bg-card/50 backdrop-blur">
+        <Card className="border-l-4 border-l-secondary bg-card/50 backdrop-blur shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Recon Health</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-secondary" />
@@ -84,7 +85,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-destructive bg-card/50 backdrop-blur">
+        <Card className="border-l-4 border-l-destructive bg-card/50 backdrop-blur shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk Anomalies</CardTitle>
             <ShieldAlert className="h-4 w-4 text-destructive" />
@@ -97,7 +98,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500 bg-card/50 backdrop-blur">
+        <Card className="border-l-4 border-l-amber-500 bg-card/50 backdrop-blur shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Pending Audit</CardTitle>
             <Clock className="h-4 w-4 text-amber-500" />
@@ -112,7 +113,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4 bg-card/50 border">
+        <Card className="lg:col-span-4 bg-card/50 border shadow-sm">
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
@@ -123,21 +124,21 @@ export default function DashboardPage() {
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={TREND_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
-                <XAxis dataKey="month" stroke="#718096" fontSize={12} />
-                <YAxis stroke="#718096" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
+                <XAxis dataKey="month" stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#718096" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#1D2126', border: '1px solid #2d3748' }}
+                  contentStyle={{ backgroundColor: '#1D2126', border: '1px solid #2d3748', borderRadius: '8px' }}
                   itemStyle={{ color: '#5AC2FF' }}
                 />
-                <Line type="monotone" dataKey="matches" stroke="#5AC2FF" strokeWidth={2} dot={{ fill: '#5AC2FF' }} />
-                <Line type="monotone" dataKey="anomalies" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444' }} />
+                <Line type="monotone" dataKey="matches" stroke="#5AC2FF" strokeWidth={3} dot={{ fill: '#5AC2FF', r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="anomalies" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444', r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 bg-card/50 border">
+        <Card className="lg:col-span-3 bg-card/50 border shadow-sm">
           <CardHeader>
             <CardTitle className="font-headline">Vendor Risk Distribution</CardTitle>
             <CardDescription>Breakdown of trading partners by AI risk tier.</CardDescription>
@@ -157,7 +158,7 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1D2126', border: '1px solid #2d3748' }}
+                    contentStyle={{ backgroundColor: '#1D2126', border: '1px solid #2d3748', borderRadius: '8px' }}
                   />
                 </PieChart>
              </ResponsiveContainer>
@@ -174,7 +175,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4 bg-card/50 border">
+        <Card className="lg:col-span-4 bg-card/50 border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-headline">High-Risk Cases</CardTitle>
             <Link href="/investigate">
@@ -214,7 +215,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 bg-card/50 border">
+        <Card className="lg:col-span-3 bg-card/50 border shadow-sm">
           <CardHeader>
             <CardTitle className="font-headline">Network Risk Scoring</CardTitle>
           </CardHeader>
