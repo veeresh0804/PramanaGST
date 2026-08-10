@@ -262,7 +262,7 @@ def test_validation_errors():
         errors_caught += 1
 
     assert errors_caught == 3, f"Expected 3 validation errors, got {errors_caught}"
-    print("  ✅ Validation error handling OK (3/3 caught)")
+    print("  [OK] Validation error handling OK (3/3 caught)")
 
 
 if __name__ == "__main__":
