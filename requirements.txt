@@ -4,3 +4,4 @@ numpy
 pydantic
 neo4j
 faker
+uvicorn
